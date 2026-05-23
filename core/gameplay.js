@@ -6,7 +6,7 @@
         let buttons = document.querySelectorAll('button, .next-button, [class*="next"], [class*="continue"]');
         for(let btn of buttons) {
             let text = btn.textContent.toLowerCase();
-            if(text.includes('далее') || text.includes('дальше') || text.includes('продолжить') || text.includes('next') || btn.classList.contains('next')) {
+            if(text.includes('далее') || text.includes('дальше') || text.includes('продолжить') || text.includes('next')) {
                 btn.click();
                 return true;
             }
@@ -28,14 +28,14 @@
     
     function autoPlayStep() {
         if(tryAnswer()) return;
-        if(clickNextButton()) return;
+        clickNextButton();
     }
     
     function startAutoPlay() {
         if(isAutoPlaying) return;
         isAutoPlaying = true;
         autoPlayInterval = setInterval(() => autoPlayStep(), 2500);
-        showMessage('Автопрохождение включено (2.5 сек между действиями)');
+        showMessage('Автопрохождение включено');
     }
     
     function stopAutoPlay() {
