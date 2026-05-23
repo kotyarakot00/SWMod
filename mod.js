@@ -286,6 +286,33 @@
         setTimeout(() => { toast.style.display = 'none'; }, 2000);
     }
     
+    window.waitForElement = function(selector, callback, timeout) {
+        timeout = timeout || 10000;
+        let interval = setInterval(() => {
+            let el = document.querySelector(selector);
+            if(el) {
+                clearInterval(interval);
+                callback(el);
+            }
+        }, 200);
+        setTimeout(() => clearInterval(interval), timeout);
+    };
+    
+    window.waitForAnyElement = function(selectors, callback, timeout) {
+        timeout = timeout || 10000;
+        let interval = setInterval(() => {
+            for(let s of selectors) {
+                let el = document.querySelector(s);
+                if(el) {
+                    clearInterval(interval);
+                    callback(el);
+                    return;
+                }
+            }
+        }, 200);
+        setTimeout(() => clearInterval(interval), timeout);
+    };
+    
     async function loadModules() {
         let container = document.getElementById('sw-modules-container');
         container.innerHTML = '<div style="text-align:center; padding:20px;">Загрузка модулей...</div>';
