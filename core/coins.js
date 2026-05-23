@@ -18,28 +18,37 @@
         return el ? el.textContent.trim() : '0';
     }
     
-    container.innerHTML = `
-        <div class="sw-input-group">
-            <input type="text" id="sw-coins-input" placeholder="${getCurrentCoins()}">
-            <button id="sw-apply-coins">✓</button>
-        </div>
-    `;
+    container.innerHTML = '<div style="text-align:center; padding:20px;">⏳ Загрузка...</div>';
     
-    document.getElementById('sw-apply-coins').addEventListener('click', () => {
-        let input = document.getElementById('sw-coins-input');
-        let coins = input.value;
-        if(coins === '') {
-            showMessage('Введите что-нибудь', true);
-            return;
-        }
-        let coinEl = findCoinElement();
-        if(coinEl) {
-            coinEl.textContent = coins;
-            showMessage('Монеты изменены');
-            input.value = '';
-            input.placeholder = getCurrentCoins();
-        } else {
-            showMessage('Элемент с монетами не найден', true);
-        }
+    window.waitForAnyElement([
+        '.character-room-wallet__counter',
+        '.sc-iBaPNL .ds-text',
+        '#ssi-header-coin-image + .ds-text',
+        '[data-testid="headbar-characterroom"] .ds-text'
+    ], (coinEl) => {
+        container.innerHTML = `
+            <div class="sw-input-group">
+                <input type="text" id="sw-coins-input" placeholder="${getCurrentCoins()}">
+                <button id="sw-apply-coins">✓</button>
+            </div>
+        `;
+        
+        document.getElementById('sw-apply-coins').addEventListener('click', () => {
+            let input = document.getElementById('sw-coins-input');
+            let coins = input.value;
+            if(coins === '') {
+                showMessage('Введите что-нибудь', true);
+                return;
+            }
+            let coinElement = findCoinElement();
+            if(coinElement) {
+                coinElement.textContent = coins;
+                showMessage('Монеты изменены');
+                input.value = '';
+                input.placeholder = getCurrentCoins();
+            } else {
+                showMessage('Элемент с монетами не найден', true);
+            }
+        });
     });
 })();
