@@ -270,7 +270,7 @@
             </div>
         </div>
         <div class="sw-content" id="sw-modules-container">
-            <div style="text-align:center; padding:20px;">Загрузка модулей...</div>
+            <div style="text-align:center; padding:20px;">Загрузка...</div>
         </div>
         <div class="sw-footer">⚡ Только визуальные изменения ⚡</div>
         <div id="sw-toast" class="sw-message"></div>
@@ -286,7 +286,7 @@
         setTimeout(() => { toast.style.display = 'none'; }, 2000);
     }
     
-    window.waitForElement = function(selector, callback, timeout) {
+    function waitForElement(selector, callback, timeout) {
         timeout = timeout || 10000;
         let interval = setInterval(() => {
             let el = document.querySelector(selector);
@@ -296,9 +296,9 @@
             }
         }, 200);
         setTimeout(() => clearInterval(interval), timeout);
-    };
+    }
     
-    window.waitForAnyElement = function(selectors, callback, timeout) {
+    function waitForAnyElement(selectors, callback, timeout) {
         timeout = timeout || 10000;
         let interval = setInterval(() => {
             for(let s of selectors) {
@@ -311,47 +311,378 @@
             }
         }, 200);
         setTimeout(() => clearInterval(interval), timeout);
-    };
-    
-    async function loadModules() {
-        let container = document.getElementById('sw-modules-container');
-        container.innerHTML = '<div style="text-align:center; padding:20px;">Загрузка модулей...</div>';
-        
-        let modules = [
-            { id: "character", name: "ПЕРСОНАЖ", url: "https://raw.githubusercontent.com/kotyarakot00/SWMod/main/core/character.js", order: 1 },
-            { id: "coins", name: "МОНЕТЫ", url: "https://raw.githubusercontent.com/kotyarakot00/SWMod/main/core/coins.js", order: 2 },
-            { id: "gameplay", name: "КАРТОЧКИ", url: "https://raw.githubusercontent.com/kotyarakot00/SWMod/main/core/gameplay.js", order: 3 },
-            { id: "customize", name: "КАСТОМИЗАЦИЯ", url: "https://raw.githubusercontent.com/kotyarakot00/SWMod/main/core/customize.js", order: 4 }
-        ];
-        
-        modules.sort((a, b) => a.order - b.order);
-        container.innerHTML = '';
-        
-        for(let mod of modules) {
-            try {
-                let response = await fetch(mod.url);
-                if(response.ok) {
-                    let code = await response.text();
-                    let section = document.createElement('div');
-                    section.className = 'sw-section';
-                    section.id = `sw-module-${mod.id}`;
-                    section.innerHTML = `<h4>${mod.name}</h4><div class="sw-module-content">Загрузка...</div>`;
-                    container.appendChild(section);
-                    
-                    let tempContainer = section.querySelector('.sw-module-content');
-                    let func = new Function('container', 'showMessage', code);
-                    func(tempContainer, showMessage);
-                } else {
-                    container.innerHTML += `<div class="sw-section"><h4>${mod.name}</h4><div style="color:#ff6170;">Ошибка загрузки модуля</div></div>`;
-                }
-            } catch(e) {
-                container.innerHTML += `<div class="sw-section"><h4>${mod.name}</h4><div style="color:#ff6170;">Ошибка: ${e.message}</div></div>`;
-            }
-        }
     }
     
-    loadModules();
+    let container = document.getElementById('sw-modules-container');
     
+    // ========== МОДУЛЬ ПЕРСОНАЖ ==========
+    (function() {
+        let section = document.createElement('div');
+        section.className = 'sw-section';
+        section.innerHTML = '<h4>ПЕРСОНАЖ</h4><div class="sw-module-content">Загрузка...</div>';
+        container.appendChild(section);
+        let modContainer = section.querySelector('.sw-module-content');
+        
+        let clothesUrls = {
+            '1': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/shirt-1-a3013c4fa9c391fe1bac95ce6c4ee82a.svg',
+            '2': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/shirt-2-14e12c50a6def128c05f9dd5755f63d6.svg',
+            '3': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/hoodie-1-3392839928b91710021a6ecb3c238388.svg',
+            '4': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/hoodie-2-bfd4f7165e831ec13629d5a1a28f6491.svg',
+            '5': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/sweater-1-a1d1cddf7b29cd4cbe0b4a2edf60d720.svg',
+            '6': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/sweater-2-2e58e7821f322bd578154594636f375e.svg',
+            '7': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/bomber-1-4ca4f85e452541d134720fb490ee9327.svg',
+            '8': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/bomber-2-fba53cfaba78216c2f8e1ff2b3a9e0b4.svg',
+            '9': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/sweatshirt-1-7824bc10ac54043238c70aa50c1a9ab2.svg',
+            '10': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/sweatshirt-2-f5f79e79b4fe70dcc1ef62287bee4b29.svg',
+            '11': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/polo-1-1ba513af9e9535f10f4168517f792e18.svg',
+            '12': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/polo-2-0cd3e035748734d0908e0ac067fe2290.svg',
+            '13': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/sweater-3-751d84f9a4dcb8451acfb7025231ec2a.svg',
+            '14': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/shirt-3-674edabe8b8350ab1b6269ba10457d75.svg',
+            '15': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/shirt-4-e278598c075949e25f677cfcf2ce8f61.svg',
+            '16': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/thirt-1-8074d7c928281950b9336156b7009615.svg',
+            '17': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/thirt-2-4d39ad7081b926c715ed3eed0e657ce7.svg',
+            '18': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/thirt-3-c2d17aa05446e281c42de568b4094103.svg',
+            '19': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/thirt-4-c0dbc1b8b4a632e47a6453765ef36fb4.svg',
+            '20': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/thirt-5-db31bec030ca9e3ac064904c569f057d.svg',
+            '21': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/thirt-6-ac6bb2369d2105759c5d787cc01e3a2c.svg',
+            '22': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/hoodie-3-4ef42832b4ff498073cd1bda75e49cb9.svg'
+        };
+        
+        let hairUrls = {
+            '1': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-1-4bfae16181ebbfc3a1878c1cf1061d67.svg',
+            '2': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-2-db9ad000bd29d6c347ed9e181889582e.svg',
+            '3': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-3-2e35aa80bd156f8b4385c478f3f3aaad.svg',
+            '4': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-4_front-5f5ec5fe320d9b594fefad2ea0ba7eeb.svg',
+            '5': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-5_front-271e99cdd0a15b1ef2f647b5f780ceef.svg',
+            '6': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-6_front-98b42b0bc7b2c00345d44a7488a4e4ed.svg',
+            '7': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-7_front-9b9e39833aa1e8a5498079f13ea24be4.svg',
+            '8': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-8_front-35ee787ec17dc8871834427e22b5cbb4.svg',
+            '9': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/hair_shape/hair_shape-9-ab543b554970162ecd37b97372b44cd8.svg'
+        };
+        
+        function findNameElement() {
+            let selectors = ['.sc-iJuWdM', '.s-headbar--profile-name', '.elements__StudentNameWrapper span'];
+            for(let s of selectors) {
+                let el = document.querySelector(s);
+                if(el && el.textContent.trim()) return el;
+            }
+            return null;
+        }
+        
+        function getCurrentName() {
+            let el = findNameElement();
+            return el ? el.textContent.trim() : 'Имя';
+        }
+        
+        modContainer.innerHTML = '<div style="text-align:center; padding:20px;">⏳ Загрузка...</div>';
+        
+        waitForElement('.avatar__part_clothes', () => {
+            modContainer.innerHTML = `
+                <div class="sw-input-group">
+                    <input type="text" id="sw-name-input" placeholder="${getCurrentName()}">
+                    <button id="sw-apply-name">✓</button>
+                </div>
+                <div class="sw-input-group">
+                    <div class="sw-custom-select">
+                        <select id="sw-clothes-select">
+                            <option value="0">Без одежды</option>
+                            ${Object.keys(clothesUrls).map(i => `<option value="${i}">Вариант ${i}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button id="sw-apply-clothes">✓</button>
+                </div>
+                <div class="sw-input-group">
+                    <div class="sw-custom-select">
+                        <select id="sw-hair-select">
+                            <option value="0">Без причёски</option>
+                            ${Object.keys(hairUrls).map(i => `<option value="${i}">Вариант ${i}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button id="sw-apply-hair">✓</button>
+                </div>
+                <div class="sw-color-row" id="sw-hair-colors">
+                    <div class="sw-color-option" style="background:#212121" title="Чёрный"></div>
+                    <div class="sw-color-option" style="background:#8B4513" title="Каштан"></div>
+                    <div class="sw-color-option" style="background:#D2691E" title="Рыжий"></div>
+                    <div class="sw-color-option" style="background:#FFD700" title="Золотистый"></div>
+                    <div class="sw-color-option" style="background:#C0C0C0" title="Седой"></div>
+                    <div class="sw-color-option" style="background:#FF6347" title="Красный"></div>
+                    <div class="sw-color-option" style="background:#9400D3" title="Фиолетовый"></div>
+                    <div class="sw-color-option" style="background:#00BFFF" title="Голубой"></div>
+                </div>
+            `;
+            
+            document.getElementById('sw-apply-name').addEventListener('click', () => {
+                let input = document.getElementById('sw-name-input');
+                let newName = input.value.trim();
+                if(!newName) {
+                    showMessage('Введите имя', true);
+                    return;
+                }
+                let nameEl = findNameElement();
+                if(nameEl) {
+                    nameEl.textContent = newName;
+                    showMessage('Имя изменено!');
+                    input.value = '';
+                    input.placeholder = getCurrentName();
+                } else {
+                    showMessage('Элемент с именем не найден', true);
+                }
+            });
+            
+            document.getElementById('sw-apply-clothes').addEventListener('click', () => {
+                let value = document.getElementById('sw-clothes-select').value;
+                waitForElement('.avatar__part_clothes', (clothesPart) => {
+                    if(value === '0') {
+                        clothesPart.innerHTML = '';
+                        showMessage('Одежда убрана');
+                    } else if(clothesUrls[value]) {
+                        fetch(clothesUrls[value]).then(r => r.text()).then(svgContent => {
+                            let newSvg = document.createElement('div');
+                            newSvg.innerHTML = svgContent;
+                            let svgElem = newSvg.querySelector('svg');
+                            if(svgElem) {
+                                svgElem.setAttribute('class', 'avatar_svg');
+                                clothesPart.innerHTML = '';
+                                clothesPart.appendChild(svgElem);
+                                showMessage('Одежда изменена');
+                            }
+                        }).catch(() => showMessage('Ошибка загрузки', true));
+                    }
+                });
+            });
+            
+            document.getElementById('sw-apply-hair').addEventListener('click', () => {
+                let value = document.getElementById('sw-hair-select').value;
+                waitForElement('.avatar__part_hair-front', (hairPart) => {
+                    if(value === '0') {
+                        hairPart.innerHTML = '';
+                        showMessage('Причёска убрана');
+                    } else if(hairUrls[value]) {
+                        fetch(hairUrls[value]).then(r => r.text()).then(svgContent => {
+                            let newSvg = document.createElement('div');
+                            newSvg.innerHTML = svgContent;
+                            let svgElem = newSvg.querySelector('svg');
+                            if(svgElem) {
+                                svgElem.setAttribute('class', 'avatar_svg');
+                                hairPart.innerHTML = '';
+                                hairPart.appendChild(svgElem);
+                                showMessage('Причёска изменена');
+                            }
+                        }).catch(() => showMessage('Ошибка загрузки', true));
+                    }
+                });
+            });
+            
+            document.querySelectorAll('#sw-hair-colors .sw-color-option').forEach(colorEl => {
+                colorEl.addEventListener('click', () => {
+                    let color = colorEl.style.background;
+                    waitForElement('.avatar__part_hair-front', (hairPart) => {
+                        let svg = hairPart.querySelector('svg');
+                        if(svg) {
+                            svg.style.fill = color;
+                            svg.querySelectorAll('path').forEach(p => p.style.fill = color);
+                            showMessage('Цвет волос изменён');
+                        }
+                    });
+                });
+            });
+        });
+    })();
+    
+    // ========== МОДУЛЬ МОНЕТЫ ==========
+    (function() {
+        let section = document.createElement('div');
+        section.className = 'sw-section';
+        section.innerHTML = '<h4>МОНЕТЫ</h4><div class="sw-module-content">Загрузка...</div>';
+        container.appendChild(section);
+        let modContainer = section.querySelector('.sw-module-content');
+        
+        function findCoinElement() {
+            let selectors = [
+                '.character-room-wallet__counter',
+                '.sc-iBaPNL .ds-text',
+                '#ssi-header-coin-image + .ds-text',
+                '[data-testid="headbar-characterroom"] .ds-text'
+            ];
+            for(let s of selectors) {
+                let el = document.querySelector(s);
+                if(el) return el;
+            }
+            return null;
+        }
+        
+        function getCurrentCoins() {
+            let el = findCoinElement();
+            return el ? el.textContent.trim() : '0';
+        }
+        
+        modContainer.innerHTML = '<div style="text-align:center; padding:20px;">⏳ Загрузка...</div>';
+        
+        waitForAnyElement([
+            '.character-room-wallet__counter',
+            '.sc-iBaPNL .ds-text',
+            '#ssi-header-coin-image + .ds-text',
+            '[data-testid="headbar-characterroom"] .ds-text'
+        ], () => {
+            modContainer.innerHTML = `
+                <div class="sw-input-group">
+                    <input type="text" id="sw-coins-input" placeholder="${getCurrentCoins()}">
+                    <button id="sw-apply-coins">✓</button>
+                </div>
+            `;
+            
+            document.getElementById('sw-apply-coins').addEventListener('click', () => {
+                let input = document.getElementById('sw-coins-input');
+                let coins = input.value;
+                if(coins === '') {
+                    showMessage('Введите что-нибудь', true);
+                    return;
+                }
+                let coinElement = findCoinElement();
+                if(coinElement) {
+                    coinElement.textContent = coins;
+                    showMessage('Монеты изменены');
+                    input.value = '';
+                    input.placeholder = getCurrentCoins();
+                } else {
+                    showMessage('Элемент с монетами не найден', true);
+                }
+            });
+        });
+    })();
+    
+    // ========== МОДУЛЬ КАРТОЧКИ ==========
+    (function() {
+        let section = document.createElement('div');
+        section.className = 'sw-section';
+        section.innerHTML = '<h4>КАРТОЧКИ</h4><div class="sw-module-content">Загрузка...</div>';
+        container.appendChild(section);
+        let modContainer = section.querySelector('.sw-module-content');
+        
+        let autoPlayInterval = null;
+        let isAutoPlaying = false;
+        
+        function clickNextButton() {
+            let buttons = document.querySelectorAll('button, .next-button, [class*="next"], [class*="continue"]');
+            for(let btn of buttons) {
+                let text = btn.textContent.toLowerCase();
+                if(text.includes('далее') || text.includes('дальше') || text.includes('продолжить') || text.includes('next')) {
+                    btn.click();
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function tryAnswer() {
+            let options = document.querySelectorAll('.answer-option, .variant, [class*="option"], [class*="choice"]');
+            for(let opt of options) {
+                if(!opt.classList.contains('disabled') && !opt.classList.contains('selected')) {
+                    opt.click();
+                    setTimeout(() => clickNextButton(), 500);
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function autoPlayStep() {
+            if(tryAnswer()) return;
+            clickNextButton();
+        }
+        
+        function startAutoPlay() {
+            if(isAutoPlaying) return;
+            isAutoPlaying = true;
+            autoPlayInterval = setInterval(() => autoPlayStep(), 2500);
+            showMessage('Автопрохождение включено');
+        }
+        
+        function stopAutoPlay() {
+            if(autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
+            isAutoPlaying = false;
+            showMessage('Автопрохождение остановлено');
+        }
+        
+        modContainer.innerHTML = `
+            <div class="sw-input-group">
+                <button id="sw-start-auto" style="background: linear-gradient(90deg, #00cc88, #00aa66);">▶ Запустить</button>
+                <button id="sw-stop-auto" style="background: linear-gradient(90deg, #ff5500, #cc3300);">⏹ Остановить</button>
+            </div>
+        `;
+        
+        document.getElementById('sw-start-auto').addEventListener('click', startAutoPlay);
+        document.getElementById('sw-stop-auto').addEventListener('click', stopAutoPlay);
+    })();
+    
+    // ========== МОДУЛЬ КАСТОМИЗАЦИЯ ==========
+    (function() {
+        let section = document.createElement('div');
+        section.className = 'sw-section';
+        section.innerHTML = '<h4>КАСТОМИЗАЦИЯ</h4><div class="sw-module-content"></div>';
+        container.appendChild(section);
+        let modContainer = section.querySelector('.sw-module-content');
+        
+        let originalBg = document.body.style.background;
+        
+        modContainer.innerHTML = `
+            <div class="sw-input-group">
+                <input type="color" id="sw-bg-color" value="#0f0c29">
+                <button id="sw-apply-bg">Цвет фона</button>
+            </div>
+            <div class="sw-input-group">
+                <input type="text" id="sw-bg-image" placeholder="URL картинки">
+                <button id="sw-apply-image">Фон картинка</button>
+            </div>
+            <div class="sw-input-group">
+                <button id="sw-hide-banners">Скрыть баннеры</button>
+                <button id="sw-show-banners">Показать баннеры</button>
+            </div>
+            <div class="sw-input-group">
+                <button id="sw-reset-bg">Сбросить фон</button>
+            </div>
+        `;
+        
+        document.getElementById('sw-apply-bg').addEventListener('click', () => {
+            let color = document.getElementById('sw-bg-color').value;
+            document.body.style.background = color;
+            document.body.style.backgroundSize = 'cover';
+            showMessage('Цвет фона изменён');
+        });
+        
+        document.getElementById('sw-apply-image').addEventListener('click', () => {
+            let url = document.getElementById('sw-bg-image').value.trim();
+            if(!url) {
+                showMessage('Введите URL картинки', true);
+                return;
+            }
+            document.body.style.background = 'url(' + url + ') center/cover no-repeat';
+            showMessage('Фон изменён');
+        });
+        
+        document.getElementById('sw-reset-bg').addEventListener('click', () => {
+            document.body.style.background = originalBg;
+            showMessage('Фон сброшен');
+        });
+        
+        document.getElementById('sw-hide-banners').addEventListener('click', () => {
+            let banners = document.querySelectorAll('[class*="banner"], [class*="ad"], [class*="promo"], .ns_notification, .banner_weekend');
+            banners.forEach(b => b.style.display = 'none');
+            showMessage('Баннеры скрыты');
+        });
+        
+        document.getElementById('sw-show-banners').addEventListener('click', () => {
+            let banners = document.querySelectorAll('[class*="banner"], [class*="ad"], [class*="promo"], .ns_notification, .banner_weekend');
+            banners.forEach(b => b.style.display = '');
+            showMessage('Баннеры показаны');
+        });
+    })();
+    
+    // ========== ДРАГ-Н-ДРОП ==========
     let isDragging = false;
     let startX, startY, ballLeft, ballTop;
     
