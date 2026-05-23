@@ -230,9 +230,9 @@
         .sw-footer {
             text-align: center;
             font-size: 11px;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.5);
             margin-top: 16px;
-            padding-top: 10px;
+            padding: 12px 10px;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         
@@ -242,6 +242,14 @@
             text-align: center;
             margin-top: 10px;
             display: none;
+        }
+        
+        .sw-loading {
+            text-align: center;
+            padding: 20px;
+            color: #b8c6ff;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
         }
         
         option {
@@ -270,7 +278,7 @@
             </div>
         </div>
         <div class="sw-content" id="sw-modules-container">
-            <div style="text-align:center; padding:20px;">Загрузка...</div>
+            <div class="sw-loading">⏳ Загрузка модулей...</div>
         </div>
         <div class="sw-footer">⚡ Только визуальные изменения ⚡</div>
         <div id="sw-toast" class="sw-message"></div>
@@ -319,7 +327,7 @@
     (function() {
         let section = document.createElement('div');
         section.className = 'sw-section';
-        section.innerHTML = '<h4>ПЕРСОНАЖ</h4><div class="sw-module-content">Загрузка...</div>';
+        section.innerHTML = '<h4>ПЕРСОНАЖ</h4><div class="sw-module-content"><div class="sw-loading">⏳ Загрузка...</div></div>';
         container.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
@@ -373,8 +381,6 @@
             let el = findNameElement();
             return el ? el.textContent.trim() : 'Имя';
         }
-        
-        modContainer.innerHTML = '<div style="text-align:center; padding:20px;">⏳ Загрузка...</div>';
         
         waitForElement('.avatar__part_clothes', () => {
             modContainer.innerHTML = `
@@ -494,7 +500,7 @@
     (function() {
         let section = document.createElement('div');
         section.className = 'sw-section';
-        section.innerHTML = '<h4>МОНЕТЫ</h4><div class="sw-module-content">Загрузка...</div>';
+        section.innerHTML = '<h4>МОНЕТЫ</h4><div class="sw-module-content"><div class="sw-loading">⏳ Загрузка...</div></div>';
         container.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
@@ -517,8 +523,6 @@
             return el ? el.textContent.trim() : '0';
         }
         
-        modContainer.innerHTML = '<div style="text-align:center; padding:20px;">⏳ Загрузка...</div>';
-        
         waitForAnyElement([
             '.character-room-wallet__counter',
             '.sc-iBaPNL .ds-text',
@@ -536,7 +540,7 @@
                 let input = document.getElementById('sw-coins-input');
                 let coins = input.value;
                 if(coins === '') {
-                    showMessage('Введите что-нибудь', true);
+                    showMessage('Введите число', true);
                     return;
                 }
                 let coinElement = findCoinElement();
@@ -552,74 +556,7 @@
         });
     })();
     
-    // ========== МОДУЛЬ КАРТОЧКИ ==========
-    (function() {
-        let section = document.createElement('div');
-        section.className = 'sw-section';
-        section.innerHTML = '<h4>КАРТОЧКИ</h4><div class="sw-module-content">Загрузка...</div>';
-        container.appendChild(section);
-        let modContainer = section.querySelector('.sw-module-content');
-        
-        let autoPlayInterval = null;
-        let isAutoPlaying = false;
-        
-        function clickNextButton() {
-            let buttons = document.querySelectorAll('button, .next-button, [class*="next"], [class*="continue"]');
-            for(let btn of buttons) {
-                let text = btn.textContent.toLowerCase();
-                if(text.includes('далее') || text.includes('дальше') || text.includes('продолжить') || text.includes('next')) {
-                    btn.click();
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        function tryAnswer() {
-            let options = document.querySelectorAll('.answer-option, .variant, [class*="option"], [class*="choice"]');
-            for(let opt of options) {
-                if(!opt.classList.contains('disabled') && !opt.classList.contains('selected')) {
-                    opt.click();
-                    setTimeout(() => clickNextButton(), 500);
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        function autoPlayStep() {
-            if(tryAnswer()) return;
-            clickNextButton();
-        }
-        
-        function startAutoPlay() {
-            if(isAutoPlaying) return;
-            isAutoPlaying = true;
-            autoPlayInterval = setInterval(() => autoPlayStep(), 2500);
-            showMessage('Автопрохождение включено');
-        }
-        
-        function stopAutoPlay() {
-            if(autoPlayInterval) {
-                clearInterval(autoPlayInterval);
-                autoPlayInterval = null;
-            }
-            isAutoPlaying = false;
-            showMessage('Автопрохождение остановлено');
-        }
-        
-        modContainer.innerHTML = `
-            <div class="sw-input-group">
-                <button id="sw-start-auto" style="background: linear-gradient(90deg, #00cc88, #00aa66);">▶ Запустить</button>
-                <button id="sw-stop-auto" style="background: linear-gradient(90deg, #ff5500, #cc3300);">⏹ Остановить</button>
-            </div>
-        `;
-        
-        document.getElementById('sw-start-auto').addEventListener('click', startAutoPlay);
-        document.getElementById('sw-stop-auto').addEventListener('click', stopAutoPlay);
-    })();
-    
-    // ========== МОДУЛЬ КАСТОМИЗАЦИЯ ==========
+    // ========== МОДУЛЬ КАСТОМИЗАЦИЯ (обновлённый) ==========
     (function() {
         let section = document.createElement('div');
         section.className = 'sw-section';
@@ -628,6 +565,60 @@
         let modContainer = section.querySelector('.sw-module-content');
         
         let originalBg = document.body.style.background;
+        
+        // Белый список элементов, которые НЕ нужно скрывать
+        let whiteListSelectors = [
+            '.sw-ball', '.sw-menu', '.sw-header', '.sw-content', '.sw-section',
+            '.sw-input-group', '.sw-custom-select', '.sw-color-row', '.sw-color-option',
+            '.sw-footer', '#sw-toast', '.sw-module-content', '.sw-loading',
+            '.sw-title', '.sw-controls', '.sw-close-menu'
+        ];
+        
+        function isWhiteListed(element) {
+            while(element) {
+                for(let selector of whiteListSelectors) {
+                    if(element.matches && element.matches(selector)) {
+                        return true;
+                    }
+                }
+                element = element.parentElement;
+            }
+            return false;
+        }
+        
+        function hideBanners() {
+            // Опросы Anketolog
+            let anketa = document.querySelectorAll('a[href*="anketolog"], #anketolog-widget-button, [id*="anketolog"], [class*="anketolog"]');
+            anketa.forEach(el => { if(!isWhiteListed(el)) el.style.display = 'none'; });
+            
+            // Баннеры рекламы (по классам)
+            let adBanners = document.querySelectorAll('[class*="banner"], [class*="promo"], [class*="advertisement"], [class*="offer"], [class*="ad-"], [data-testid*="banner"]');
+            adBanners.forEach(el => { if(!isWhiteListed(el)) el.style.display = 'none'; });
+            
+            // Конкретные блоки с учениками (реклама премиума)
+            let premiumBlocks = document.querySelectorAll('.sc-fwwElh, .sc-jSoCLE, .sc-nZgfj, .sc-eJReFG, .sc-euWMRQ, .sc-gpaZuh');
+            premiumBlocks.forEach(el => { if(!isWhiteListed(el)) el.style.display = 'none'; });
+            
+            // Плашки "N учеников уже занимаются с полным доступом"
+            let statBlocks = document.querySelectorAll('[class*="students"], [class*="premium"], [class*="full-access"]');
+            statBlocks.forEach(el => { 
+                if(el.textContent && (el.textContent.includes('учеников') || el.textContent.includes('полным доступом') || el.textContent.includes('Premium'))) {
+                    if(!isWhiteListed(el)) el.style.display = 'none';
+                }
+            });
+            
+            showMessage('Баннеры и опросы скрыты');
+        }
+        
+        function showBanners() {
+            let hiddenElements = document.querySelectorAll('[style*="display: none"]');
+            hiddenElements.forEach(el => {
+                if(!isWhiteListed(el)) {
+                    el.style.display = '';
+                }
+            });
+            showMessage('Баннеры и опросы показаны');
+        }
         
         modContainer.innerHTML = `
             <div class="sw-input-group">
@@ -639,8 +630,8 @@
                 <button id="sw-apply-image">Фон картинка</button>
             </div>
             <div class="sw-input-group">
-                <button id="sw-hide-banners">Скрыть баннеры</button>
-                <button id="sw-show-banners">Показать баннеры</button>
+                <button id="sw-hide-banners">Скрыть баннеры/опросы</button>
+                <button id="sw-show-banners">Показать всё</button>
             </div>
             <div class="sw-input-group">
                 <button id="sw-reset-bg">Сбросить фон</button>
@@ -669,17 +660,8 @@
             showMessage('Фон сброшен');
         });
         
-        document.getElementById('sw-hide-banners').addEventListener('click', () => {
-            let banners = document.querySelectorAll('[class*="banner"], [class*="ad"], [class*="promo"], .ns_notification, .banner_weekend');
-            banners.forEach(b => b.style.display = 'none');
-            showMessage('Баннеры скрыты');
-        });
-        
-        document.getElementById('sw-show-banners').addEventListener('click', () => {
-            let banners = document.querySelectorAll('[class*="banner"], [class*="ad"], [class*="promo"], .ns_notification, .banner_weekend');
-            banners.forEach(b => b.style.display = '');
-            showMessage('Баннеры показаны');
-        });
+        document.getElementById('sw-hide-banners').addEventListener('click', hideBanners);
+        document.getElementById('sw-show-banners').addEventListener('click', showBanners);
     })();
     
     // ========== ДРАГ-Н-ДРОП ==========
