@@ -50,9 +50,12 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            width: 400px;
+            width: 480px;
+            min-width: 320px;
+            max-width: 90vw;
+            resize: both;
+            overflow: auto;
             max-height: 85vh;
-            overflow-y: auto;
             background: rgba(10,8,20,0.95);
             backdrop-filter: blur(16px);
             border-radius: 28px;
@@ -65,9 +68,11 @@
             transform: translate(-50%,-50%);
         }
         
-        .sw-menu::-webkit-scrollbar { width: 6px; }
-        .sw-menu::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
-        .sw-menu::-webkit-scrollbar-thumb { background: #ff00cc; border-radius: 3px; }
+        .sw-menu::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
+        }
         
         .sw-header {
             background: linear-gradient(90deg, #0f0c29, #302b63, #24243e);
@@ -114,6 +119,8 @@
         
         .sw-content {
             padding: 20px;
+            overflow-y: auto;
+            max-height: calc(85vh - 100px);
         }
         
         .sw-section {
@@ -137,10 +144,12 @@
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
+            flex-wrap: wrap;
         }
         
         .sw-input-group input, .sw-input-group select {
             flex: 1;
+            min-width: 120px;
             padding: 10px 12px;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.2);
@@ -189,7 +198,6 @@
             padding: 10px 16px;
             border-radius: 12px;
             border: none;
-            background: linear-gradient(90deg, #ff00cc, #3333ff);
             color: white;
             cursor: pointer;
             font-weight: bold;
@@ -202,13 +210,19 @@
             opacity: 0.9;
         }
         
-        .sw-reset-btn {
-            background: rgba(30,30,40,0.6) !important;
-            border: 1px dashed rgba(255,255,255,0.4) !important;
-            color: rgba(255,255,255,0.7) !important;
+        .sw-check-btn {
+            background: linear-gradient(90deg, #00cc66, #009944);
         }
+        
+        .sw-reset-btn {
+            background: rgba(50,50,65,0.7) !important;
+            border: 1px dashed rgba(255,255,255,0.4) !important;
+            font-size: 16px;
+            padding: 8px 14px !important;
+        }
+        
         .sw-reset-btn:hover {
-            background: rgba(50,50,65,0.8) !important;
+            background: rgba(70,70,90,0.9) !important;
         }
         
         .sw-color-row {
@@ -237,7 +251,7 @@
             font-size: 11px;
             color: rgba(255,255,255,0.3);
             margin-top: 16px;
-            padding-top: 10px;
+            padding: 12px;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         
@@ -255,6 +269,23 @@
             color: #b8c6ff;
             font-size: 13px;
             font-family: 'Inter', sans-serif;
+        }
+        
+        .sw-resize-handle {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            cursor: nw-resize;
+            background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.3) 50%);
+            border-radius: 0 0 12px 0;
+            pointer-events: auto;
+            z-index: 100001;
+        }
+        
+        .sw-resize-handle:hover {
+            background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.6) 50%);
         }
         
         option {
@@ -285,9 +316,42 @@
         <div class="sw-content" id="sw-modules-container"></div>
         <div class="sw-footer">⚡ Только визуальные изменения ⚡</div>
         <div id="sw-toast" class="sw-message"></div>
+        <div class="sw-resize-handle"></div>
     `;
     document.body.appendChild(menu);
     window.swMenu = menu;
+    
+    // Ресайз меню
+    let resizeHandle = menu.querySelector('.sw-resize-handle');
+    let isResizing = false;
+    let startX, startY, startWidth, startHeight;
+    
+    resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = menu.offsetWidth;
+        startHeight = menu.offsetHeight;
+        menu.style.transform = 'none';
+        menu.style.left = menu.offsetLeft + 'px';
+        menu.style.top = menu.offsetTop + 'px';
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if(!isResizing) return;
+        let newWidth = startWidth + (e.clientX - startX);
+        let newHeight = startHeight + (e.clientY - startY);
+        newWidth = Math.min(window.innerWidth - 50, Math.max(320, newWidth));
+        newHeight = Math.min(window.innerHeight - 50, Math.max(400, newHeight));
+        menu.style.width = newWidth + 'px';
+        menu.style.height = newHeight + 'px';
+    });
+    
+    document.addEventListener('mouseup', () => {
+        isResizing = false;
+    });
     
     function showMessage(text, isError) {
         let toast = document.getElementById('sw-toast');
@@ -399,8 +463,8 @@
             modContainer.innerHTML = `
                 <div class="sw-input-group">
                     <input type="text" id="sw-name-input" placeholder="${getCurrentName()}">
-                    <button id="sw-apply-name">✓</button>
-                    <button id="sw-reset-name" class="sw-reset-btn">Сброс</button>
+                    <button id="sw-apply-name" class="sw-check-btn">✓</button>
+                    <button id="sw-reset-name" class="sw-reset-btn">⟳</button>
                 </div>
                 <div class="sw-input-group">
                     <div class="sw-custom-select">
@@ -409,7 +473,7 @@
                             ${Object.keys(clothesUrls).map(i => `<option value="${i}">Вариант ${i}</option>`).join('')}
                         </select>
                     </div>
-                    <button id="sw-apply-clothes">✓</button>
+                    <button id="sw-apply-clothes" class="sw-check-btn">✓</button>
                 </div>
                 <div class="sw-input-group">
                     <div class="sw-custom-select">
@@ -418,7 +482,7 @@
                             ${Object.keys(hairUrls).map(i => `<option value="${i}">Вариант ${i}</option>`).join('')}
                         </select>
                     </div>
-                    <button id="sw-apply-hair">✓</button>
+                    <button id="sw-apply-hair" class="sw-check-btn">✓</button>
                 </div>
                 <div class="sw-color-row" id="sw-hair-colors">
                     <div class="sw-color-option" style="background:#212121" title="Чёрный"></div>
@@ -431,7 +495,7 @@
                     <div class="sw-color-option" style="background:#00BFFF" title="Голубой"></div>
                 </div>
                 <div class="sw-input-group">
-                    <button id="sw-reset-character" class="sw-reset-btn">Восстановить персонажа</button>
+                    <button id="sw-reset-character" class="sw-reset-btn">⟳ Восстановить</button>
                 </div>
             `;
             
@@ -567,8 +631,8 @@
             modContainer.innerHTML = `
                 <div class="sw-input-group">
                     <input type="text" id="sw-coins-input" placeholder="${getCurrentCoins()}">
-                    <button id="sw-apply-coins">✓</button>
-                    <button id="sw-reset-coins" class="sw-reset-btn">Сброс</button>
+                    <button id="sw-apply-coins" class="sw-check-btn">✓</button>
+                    <button id="sw-reset-coins" class="sw-reset-btn">⟳</button>
                 </div>
             `;
             
@@ -646,27 +710,38 @@
             showMessage('Реклама и опросы показаны');
         }
         
-        modContainer.innerHTML = `
-            <div class="sw-input-group">
-                <input type="color" id="sw-bg-color" value="#0f0c29">
-                <button id="sw-apply-bg">Цвет фона</button>
-                <button id="sw-reset-bg" class="sw-reset-btn">Сброс</button>
-            </div>
-            <div class="sw-input-group">
-                <button id="sw-hide-banners">Скрыть рекламу</button>
-                <button id="sw-show-banners">Показать рекламу</button>
-                <button id="sw-reset-banners" class="sw-reset-btn">Сброс</button>
-            </div>
-        `;
-        
-        document.getElementById('sw-apply-bg').addEventListener('click', () => {
+        // Функция применения цвета фона
+        function applyBgColor() {
             let color = document.getElementById('sw-bg-color').value;
             document.body.style.background = color;
             document.body.style.backgroundSize = 'cover';
             showMessage('Цвет фона изменён');
-        });
+        }
         
-        document.getElementById('sw-reset-bg').addEventListener('click', () => {
+        modContainer.innerHTML = `
+            <div class="sw-input-group">
+                <input type="color" id="sw-bg-color" value="#0f0c29">
+                <button id="sw-apply-bg" class="sw-check-btn">✓</button>
+                <button id="sw-reset-bg" class="sw-reset-btn">⟳</button>
+            </div>
+            <div class="sw-input-group">
+                <button id="sw-hide-banners" class="sw-check-btn">Скрыть рекламу</button>
+                <button id="sw-show-banners" class="sw-check-btn">Показать рекламу</button>
+                <button id="sw-reset-banners" class="sw-reset-btn">⟳</button>
+            </div>
+        `;
+        
+        // Вешаем события
+        let bgColorInput = document.getElementById('sw-bg-color');
+        let applyBgBtn = document.getElementById('sw-apply-bg');
+        let resetBgBtn = document.getElementById('sw-reset-bg');
+        
+        applyBgBtn.addEventListener('click', applyBgColor);
+        
+        // Дополнительно: apply при выборе цвета через пипетку
+        bgColorInput.addEventListener('change', applyBgColor);
+        
+        resetBgBtn.addEventListener('click', () => {
             document.body.style.background = originalBg;
             showMessage('Фон сброшен');
         });
@@ -683,14 +758,6 @@
         section.innerHTML = '<h4>НАСТРОЙКИ МЕНЮ</h4><div class="sw-module-content"></div>';
         container.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
-        
-        let menuColors = {
-            'Фиолетовый': 'rgba(10,8,20,0.95)',
-            'Красный': 'rgba(40,10,15,0.95)',
-            'Зелёный': 'rgba(10,30,15,0.95)',
-            'Голубой': 'rgba(10,25,40,0.95)',
-            'Оранжевый': 'rgba(40,20,10,0.95)'
-        };
         
         function applyMenuColor(color) {
             document.querySelector('.sw-menu').style.background = color;
@@ -786,8 +853,8 @@
                     <option value="rgba(10,25,40,0.95)">Голубой</option>
                     <option value="rgba(40,20,10,0.95)">Оранжевый</option>
                 </select>
-                <button id="sw-apply-menu-color">Применить</button>
-                <button id="sw-reset-menu-color" class="sw-reset-btn">Сброс</button>
+                <button id="sw-apply-menu-color" class="sw-check-btn">✓</button>
+                <button id="sw-reset-menu-color" class="sw-reset-btn">⟳</button>
             </div>
             <div class="sw-input-group">
                 <input type="text" id="sw-profile-name" placeholder="Имя профиля">
