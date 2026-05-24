@@ -295,6 +295,7 @@
     `;
     document.head.appendChild(style);
     
+    // Удаляем старые элементы если есть
     if(window.swBall) window.swBall.remove();
     if(window.swMenu) window.swMenu.remove();
     
@@ -324,12 +325,12 @@
     // Ресайз меню
     let resizeHandle = menu.querySelector('.sw-resize-handle');
     let isResizing = false;
-    let startX, startY, startWidth, startHeight;
+    let rStartX, rStartY, startWidth, startHeight;
     
     resizeHandle.addEventListener('mousedown', (e) => {
         isResizing = true;
-        startX = e.clientX;
-        startY = e.clientY;
+        rStartX = e.clientX;
+        rStartY = e.clientY;
         startWidth = menu.offsetWidth;
         startHeight = menu.offsetHeight;
         menu.style.transform = 'none';
@@ -341,8 +342,8 @@
     
     document.addEventListener('mousemove', (e) => {
         if(!isResizing) return;
-        let newWidth = startWidth + (e.clientX - startX);
-        let newHeight = startHeight + (e.clientY - startY);
+        let newWidth = startWidth + (e.clientX - rStartX);
+        let newHeight = startHeight + (e.clientY - rStartY);
         newWidth = Math.min(window.innerWidth - 50, Math.max(320, newWidth));
         newHeight = Math.min(window.innerHeight - 50, Math.max(400, newHeight));
         menu.style.width = newWidth + 'px';
@@ -710,7 +711,6 @@
             showMessage('Реклама и опросы показаны');
         }
         
-        // Функция применения цвета фона
         function applyBgColor() {
             let color = document.getElementById('sw-bg-color').value;
             document.body.style.background = color;
@@ -731,14 +731,11 @@
             </div>
         `;
         
-        // Вешаем события
         let bgColorInput = document.getElementById('sw-bg-color');
         let applyBgBtn = document.getElementById('sw-apply-bg');
         let resetBgBtn = document.getElementById('sw-reset-bg');
         
         applyBgBtn.addEventListener('click', applyBgColor);
-        
-        // Дополнительно: apply при выборе цвета через пипетку
         bgColorInput.addEventListener('change', applyBgColor);
         
         resetBgBtn.addEventListener('click', () => {
@@ -882,23 +879,23 @@
     })();
     
     // ========== ДРАГ-Н-ДРОП ==========
-    let isDragging = false;
-    let startX, startY, ballLeft, ballTop;
+    let dragActive = false;
+    let dragStartX, dragStartY, ballStartLeft, ballStartTop;
     
     ball.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        ballLeft = ball.offsetLeft;
-        ballTop = ball.offsetTop;
+        dragActive = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        ballStartLeft = ball.offsetLeft;
+        ballStartTop = ball.offsetTop;
         ball.style.cursor = 'grabbing';
         e.preventDefault();
     });
     
     document.addEventListener('mousemove', (e) => {
-        if(!isDragging) return;
-        let newLeft = ballLeft + (e.clientX - startX);
-        let newTop = ballTop + (e.clientY - startY);
+        if(!dragActive) return;
+        let newLeft = ballStartLeft + (e.clientX - dragStartX);
+        let newTop = ballStartTop + (e.clientY - dragStartY);
         newLeft = Math.max(0, Math.min(window.innerWidth - ball.offsetWidth, newLeft));
         newTop = Math.max(0, Math.min(window.innerHeight - ball.offsetHeight, newTop));
         ball.style.left = newLeft + 'px';
@@ -908,30 +905,30 @@
     });
     
     document.addEventListener('mouseup', () => {
-        isDragging = false;
+        dragActive = false;
         ball.style.cursor = 'grab';
     });
     
-    let menuDrag = false;
-    let menuX, menuY, menuLeft, menuTop;
-    let header = menu.querySelector('.sw-header');
+    let menuDragActive = false;
+    let menuDragStartX, menuDragStartY, menuStartLeft, menuStartTop;
+    let menuHeader = menu.querySelector('.sw-header');
     
-    header.addEventListener('mousedown', (e) => {
+    menuHeader.addEventListener('mousedown', (e) => {
         if(e.target.tagName === 'BUTTON') return;
-        menuDrag = true;
-        menuX = e.clientX;
-        menuY = e.clientY;
-        menuLeft = menu.offsetLeft;
-        menuTop = menu.offsetTop;
+        menuDragActive = true;
+        menuDragStartX = e.clientX;
+        menuDragStartY = e.clientY;
+        menuStartLeft = menu.offsetLeft;
+        menuStartTop = menu.offsetTop;
         menu.style.cursor = 'grabbing';
         menu.style.transform = 'none';
         e.preventDefault();
     });
     
     document.addEventListener('mousemove', (e) => {
-        if(!menuDrag) return;
-        let newLeft = menuLeft + (e.clientX - menuX);
-        let newTop = menuTop + (e.clientY - menuY);
+        if(!menuDragActive) return;
+        let newLeft = menuStartLeft + (e.clientX - menuDragStartX);
+        let newTop = menuStartTop + (e.clientY - menuDragStartY);
         newLeft = Math.max(-menu.offsetWidth + 50, Math.min(window.innerWidth - 50, newLeft));
         newTop = Math.max(0, Math.min(window.innerHeight - 100, newTop));
         menu.style.left = newLeft + 'px';
@@ -939,15 +936,15 @@
     });
     
     document.addEventListener('mouseup', () => {
-        menuDrag = false;
+        menuDragActive = false;
         menu.style.cursor = 'default';
     });
     
-    let visible = true;
+    let menuVisible = true;
     ball.addEventListener('click', () => {
-        if(visible) {
+        if(menuVisible) {
             menu.style.display = 'none';
-            visible = false;
+            menuVisible = false;
         } else {
             menu.style.display = 'block';
             if(menu.style.left && menu.style.left !== 'auto') {
@@ -957,13 +954,13 @@
                 menu.style.top = '50%';
                 menu.style.transform = 'translate(-50%, -50%)';
             }
-            visible = true;
+            menuVisible = true;
         }
     });
     
     menu.querySelector('.sw-close-menu').addEventListener('click', () => {
         menu.style.display = 'none';
-        visible = false;
+        menuVisible = false;
     });
     
     console.log('%c★ SW MOD загружен ★', 'color:#ff00cc;font-size:14px;font-weight:bold');
