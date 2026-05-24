@@ -10,7 +10,7 @@
 
 Открой консоль на сайте Uchi.ru (F12) и вставь:
 
-fetch("https://raw.githubusercontent.com/kotyarakot00/SWMod/main/mod.js").then(r=>r.text()).then(eval)
+```fetch("https://raw.githubusercontent.com/kotyarakot00/SWMod/main/mod.js").then(r=>r.text()).then(eval)```
 
 ❗Мод может слетать при переходе на следующие страницы на сайте, вам придётся вставлять код в консоль каждый раз.
 
