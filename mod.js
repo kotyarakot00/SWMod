@@ -1,16 +1,6 @@
 (function(){
     let style = document.createElement('style');
     style.textContent = `
-        * {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .sw-menu::-webkit-scrollbar, .sw-content::-webkit-scrollbar, .sw-module-content::-webkit-scrollbar {
-            display: none;
-            width: 0;
-            height: 0;
-        }
-        
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-8px); }
@@ -60,10 +50,10 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            width: 420px;
+            width: 400px;
             max-height: 85vh;
             overflow-y: auto;
-            background: var(--sw-bg, rgba(10,8,20,0.95));
+            background: rgba(10,8,20,0.95);
             backdrop-filter: blur(16px);
             border-radius: 28px;
             z-index: 100000;
@@ -75,10 +65,55 @@
             transform: translate(-50%,-50%);
         }
         
+        .sw-menu::-webkit-scrollbar { width: 6px; }
+        .sw-menu::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .sw-menu::-webkit-scrollbar-thumb { background: #ff00cc; border-radius: 3px; }
+        
+        .sw-header {
+            background: linear-gradient(90deg, #0f0c29, #302b63, #24243e);
+            padding: 18px 24px;
+            border-radius: 28px 28px 0 0;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 2px solid rgba(240,147,251,0.5);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .sw-title {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, #ff00cc, #00ffff, #ff00cc);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: glitch 4s infinite;
+        }
+        
+        .sw-controls button {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 12px;
+            margin-left: 8px;
+            transition: 0.2s;
+        }
+        .sw-controls button:hover {
+            background: rgba(240,147,251,0.4);
+            border-color: #ff00cc;
+            transform: scale(1.05);
+        }
+        
         .sw-content {
             padding: 20px;
-            overflow-y: auto;
-            max-height: 65vh;
         }
         
         .sw-section {
@@ -96,19 +131,6 @@
             background-clip: text;
             color: transparent;
             letter-spacing: 1px;
-        }
-        
-        .sw-subsection {
-            margin: 12px 0 8px 8px;
-            padding-left: 8px;
-            border-left: 2px solid rgba(255,255,255,0.2);
-        }
-        
-        .sw-subsection h5 {
-            margin: 0 0 8px 0;
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
-            letter-spacing: 0.5px;
         }
         
         .sw-input-group {
@@ -185,10 +207,8 @@
             border: 1px dashed rgba(255,255,255,0.4) !important;
             color: rgba(255,255,255,0.7) !important;
         }
-        
         .sw-reset-btn:hover {
             background: rgba(50,50,65,0.8) !important;
-            border: 1px dashed rgba(255,255,255,0.6) !important;
         }
         
         .sw-color-row {
@@ -212,24 +232,12 @@
             border-color: #ff00cc;
         }
         
-        .sw-profile-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-        
-        .sw-profile-buttons button {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 12px;
-        }
-        
         .sw-footer {
             text-align: center;
             font-size: 11px;
-            color: rgba(255,255,255,0.5);
-            padding: 12px 10px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 16px;
+            padding-top: 10px;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         
@@ -249,23 +257,6 @@
             font-family: 'Inter', sans-serif;
         }
         
-        .sw-shape-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-        
-        .sw-shape {
-            position: absolute;
-            opacity: 0.08;
-            pointer-events: none;
-        }
-        
         option {
             background: #1a1a2e;
             color: white;
@@ -275,14 +266,6 @@
     
     if(window.swBall) window.swBall.remove();
     if(window.swMenu) window.swMenu.remove();
-    if(window.swShapeContainer) window.swShapeContainer.remove();
-    
-    // Контейнер для фигур на фоне
-    let shapeContainer = document.createElement('div');
-    shapeContainer.className = 'sw-shape-bg';
-    shapeContainer.id = 'sw-shape-bg';
-    document.body.appendChild(shapeContainer);
-    window.swShapeContainer = shapeContainer;
     
     let ball = document.createElement('div');
     ball.className = 'sw-ball';
@@ -341,149 +324,13 @@
         setTimeout(() => clearInterval(interval), timeout);
     }
     
-    // ========== СИСТЕМА ПРОФИЛЕЙ ==========
-    let profiles = {
-        current: null,
-        list: {}
-    };
-    
-    function loadProfiles() {
-        try {
-            let saved = localStorage.getItem('sw_mod_profiles');
-            if(saved) {
-                profiles = JSON.parse(saved);
-            } else {
-                profiles = { current: null, list: {} };
-            }
-        } catch(e) { console.warn(e); }
-    }
-    
-    function saveProfiles() {
-        localStorage.setItem('sw_mod_profiles', JSON.stringify(profiles));
-    }
-    
-    function createProfile(name) {
-        if(profiles.list[name]) {
-            showMessage('Профиль с таким именем уже существует', true);
-            return false;
-        }
-        profiles.list[name] = {
-            name: name,
-            theme: document.body.style.backgroundColor || '#0f0c29',
-            menuBg: getComputedStyle(document.documentElement).getPropertyValue('--sw-bg').trim() || 'rgba(10,8,20,0.95)',
-            coins: null,
-            characterName: null
-        };
-        profiles.current = name;
-        saveProfiles();
-        showMessage('Профиль "' + name + '" создан');
-        return true;
-    }
-    
-    function deleteProfile(name) {
-        if(!profiles.list[name]) {
-            showMessage('Профиль не найден', true);
-            return false;
-        }
-        delete profiles.list[name];
-        if(profiles.current === name) {
-            profiles.current = null;
-        }
-        saveProfiles();
-        showMessage('Профиль "' + name + '" удалён');
-        return true;
-    }
-    
-    function saveToProfile(name) {
-        if(!profiles.list[name]) {
-            showMessage('Профиль не найден', true);
-            return false;
-        }
-        profiles.list[name].theme = document.body.style.backgroundColor || '#0f0c29';
-        profiles.list[name].menuBg = getComputedStyle(document.documentElement).getPropertyValue('--sw-bg').trim() || 'rgba(10,8,20,0.95)';
-        let coinEl = document.querySelector('.character-room-wallet__counter, .sc-iBaPNL .ds-text');
-        if(coinEl) profiles.list[name].coins = coinEl.textContent;
-        let nameEl = document.querySelector('.sc-iJuWdM, .s-headbar--profile-name');
-        if(nameEl) profiles.list[name].characterName = nameEl.textContent;
-        saveProfiles();
-        showMessage('Профиль "' + name + '" сохранён');
-        return true;
-    }
-    
-    function loadProfile(name) {
-        if(!profiles.list[name]) {
-            showMessage('Профиль не найден', true);
-            return false;
-        }
-        let profile = profiles.list[name];
-        document.body.style.backgroundColor = profile.theme;
-        document.documentElement.style.setProperty('--sw-bg', profile.menuBg);
-        if(profile.coins) {
-            let coinEl = document.querySelector('.character-room-wallet__counter, .sc-iBaPNL .ds-text');
-            if(coinEl) coinEl.textContent = profile.coins;
-        }
-        if(profile.characterName) {
-            let nameEl = document.querySelector('.sc-iJuWdM, .s-headbar--profile-name');
-            if(nameEl) nameEl.textContent = profile.characterName;
-        }
-        profiles.current = name;
-        saveProfiles();
-        showMessage('Профиль "' + name + '" загружен');
-        return true;
-    }
-    
-    // Функция для генерации фигур на фоне
-    function generateShapes(shapeType, baseColor) {
-        let container = document.getElementById('sw-shape-bg');
-        container.innerHTML = '';
-        if(shapeType === 'none') return;
-        
-        let colors = [baseColor, '#ff00cc', '#00ffff', '#ffaa00'];
-        let shapesCount = 15;
-        
-        for(let i = 0; i < shapesCount; i++) {
-            let shape = document.createElement('div');
-            shape.className = 'sw-shape';
-            let size = Math.random() * 80 + 20;
-            let left = Math.random() * 100;
-            let top = Math.random() * 100;
-            let color = colors[Math.floor(Math.random() * colors.length)];
-            let animation = Math.random() * 10 + 5;
-            
-            if(shapeType === 'circle') {
-                shape.style.borderRadius = '50%';
-                shape.style.backgroundColor = color;
-                shape.style.width = size + 'px';
-                shape.style.height = size + 'px';
-            } else if(shapeType === 'triangle') {
-                shape.style.width = '0';
-                shape.style.height = '0';
-                shape.style.borderLeft = (size/2) + 'px solid transparent';
-                shape.style.borderRight = (size/2) + 'px solid transparent';
-                shape.style.borderBottom = size + 'px solid ' + color;
-                shape.style.backgroundColor = 'transparent';
-            } else if(shapeType === 'cross') {
-                shape.style.width = size + 'px';
-                shape.style.height = size + 'px';
-                shape.style.background = `linear-gradient(45deg, transparent 45%, ${color} 45%, ${color} 55%, transparent 55%),
-                                          linear-gradient(-45deg, transparent 45%, ${color} 45%, ${color} 55%, transparent 55%)`;
-                shape.style.backgroundColor = 'transparent';
-            }
-            
-            shape.style.left = left + '%';
-            shape.style.top = top + '%';
-            shape.style.animation = `float ${animation}s infinite ease-in-out`;
-            container.appendChild(shape);
-        }
-    }
-    
     let container = document.getElementById('sw-modules-container');
     
     // ========== МОДУЛЬ ПЕРСОНАЖ ==========
     (function() {
         let section = document.createElement('div');
         section.className = 'sw-section';
-        section.innerHTML = '<h4>ПЕРСОНАЖ</h4><div class="sw-module-content"><div class="sw-loading">⏳ Загрузка...</div></div>';
+        section.innerHTML = '<h4>ПЕРСОНАЖ</h4><div class="sw-module-content"><div class="sw-loading">Загрузка...</div></div>';
         container.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
@@ -541,12 +388,11 @@
         function resetCharacter() {
             waitForElement('.avatar__part_clothes', (clothesPart) => {
                 clothesPart.innerHTML = '';
-                showMessage('Одежда сброшена');
             });
             waitForElement('.avatar__part_hair-front', (hairPart) => {
                 hairPart.innerHTML = '';
-                showMessage('Причёска сброшена');
             });
+            showMessage('Персонаж сброшен');
         }
         
         waitForElement('.avatar__part_clothes', () => {
@@ -554,7 +400,7 @@
                 <div class="sw-input-group">
                     <input type="text" id="sw-name-input" placeholder="${getCurrentName()}">
                     <button id="sw-apply-name">✓</button>
-                    <button id="sw-reset-name" class="sw-reset-btn">↺</button>
+                    <button id="sw-reset-name" class="sw-reset-btn">Сброс</button>
                 </div>
                 <div class="sw-input-group">
                     <div class="sw-custom-select">
@@ -599,7 +445,7 @@
                 let nameEl = findNameElement();
                 if(nameEl) {
                     nameEl.textContent = newName;
-                    showMessage('Имя изменено!');
+                    showMessage('Имя изменено');
                     input.value = '';
                     input.placeholder = getCurrentName();
                 } else {
@@ -681,7 +527,7 @@
     (function() {
         let section = document.createElement('div');
         section.className = 'sw-section';
-        section.innerHTML = '<h4>МОНЕТЫ</h4><div class="sw-module-content"><div class="sw-loading">⏳ Загрузка...</div></div>';
+        section.innerHTML = '<h4>МОНЕТЫ</h4><div class="sw-module-content"><div class="sw-loading">Загрузка...</div></div>';
         container.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
@@ -722,7 +568,7 @@
                 <div class="sw-input-group">
                     <input type="text" id="sw-coins-input" placeholder="${getCurrentCoins()}">
                     <button id="sw-apply-coins">✓</button>
-                    <button id="sw-reset-coins" class="sw-reset-btn">↺</button>
+                    <button id="sw-reset-coins" class="sw-reset-btn">Сброс</button>
                 </div>
             `;
             
@@ -756,21 +602,26 @@
         container.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
-        let originalBg = document.body.style.backgroundColor;
+        let originalBg = document.body.style.background;
+        
+        let blackListSelectors = [
+            'a[href*="anketolog"]', '#anketolog-widget-button', '[id*="anketolog"]', '[class*="anketolog"]',
+            '[class*="advertisement"]', '[class*="offer"]', '[class*="promo"]', '[data-testid*="promo"]',
+            '.sc-fwwElh', '.sc-jSoCLE', '.sc-nZgfj', '.sc-eJReFG'
+        ];
         
         let whiteListSelectors = [
             '.sw-ball', '.sw-menu', '.sw-header', '.sw-content', '.sw-section',
             '.sw-input-group', '.sw-custom-select', '.sw-color-row', '.sw-color-option',
-            '.sw-footer', '#sw-toast', '.sw-module-content', '.sw-loading',
-            '.sw-title', '.sw-controls', '.sw-close-menu', '#sw-shape-bg', '.sw-shape'
+            '.sw-footer', '#sw-toast', '.sw-module-content', '.sw-title',
+            '.sw-controls', '.sw-close-menu', '.marathon-banner-container',
+            '[class*="marathon"]', '[class*="Marathon"]'
         ];
         
         function isWhiteListed(element) {
             while(element) {
                 for(let selector of whiteListSelectors) {
-                    if(element.matches && element.matches(selector)) {
-                        return true;
-                    }
+                    if(element.matches && element.matches(selector)) return true;
                 }
                 element = element.parentElement;
             }
@@ -778,91 +629,51 @@
         }
         
         function hideBanners() {
-            let anketa = document.querySelectorAll('a[href*="anketolog"], #anketolog-widget-button, [id*="anketolog"], [class*="anketolog"]');
-            anketa.forEach(el => { if(!isWhiteListed(el)) el.style.display = 'none'; });
-            
-            let adBanners = document.querySelectorAll('[class*="banner"], [class*="promo"], [class*="advertisement"], [class*="offer"], [class*="ad-"], [data-testid*="banner"]');
-            adBanners.forEach(el => { if(!isWhiteListed(el)) el.style.display = 'none'; });
-            
-            let premiumBlocks = document.querySelectorAll('.sc-fwwElh, .sc-jSoCLE, .sc-nZgfj, .sc-eJReFG, .sc-euWMRQ, .sc-gpaZuh');
-            premiumBlocks.forEach(el => { if(!isWhiteListed(el)) el.style.display = 'none'; });
-            
-            let statBlocks = document.querySelectorAll('[class*="students"], [class*="premium"], [class*="full-access"]');
-            statBlocks.forEach(el => { 
-                if(el.textContent && (el.textContent.includes('учеников') || el.textContent.includes('полным доступом') || el.textContent.includes('Premium'))) {
+            for(let selector of blackListSelectors) {
+                document.querySelectorAll(selector).forEach(el => {
                     if(!isWhiteListed(el)) el.style.display = 'none';
-                }
-            });
-            
-            showMessage('Баннеры и опросы скрыты');
+                });
+            }
+            showMessage('Реклама и опросы скрыты');
         }
         
         function showBanners() {
-            let hiddenElements = document.querySelectorAll('[style*="display: none"]');
-            hiddenElements.forEach(el => {
-                if(!isWhiteListed(el)) {
-                    el.style.display = '';
-                }
-            });
-            showMessage('Баннеры и опросы показаны');
-        }
-        
-        function resetBanners() {
-            showBanners();
+            for(let selector of blackListSelectors) {
+                document.querySelectorAll(selector).forEach(el => {
+                    if(!isWhiteListed(el)) el.style.display = '';
+                });
+            }
+            showMessage('Реклама и опросы показаны');
         }
         
         modContainer.innerHTML = `
-            <div class="sw-subsection">
-                <h5>🎨 ФОН</h5>
-                <div class="sw-input-group">
-                    <input type="color" id="sw-bg-color" value="#0f0c29">
-                    <button id="sw-apply-bg">Применить</button>
-                    <button id="sw-reset-bg" class="sw-reset-btn">↺</button>
-                </div>
-                <div class="sw-input-group">
-                    <select id="sw-shape-type">
-                        <option value="none">Без фигур</option>
-                        <option value="circle">Круг</option>
-                        <option value="triangle">Треугольник</option>
-                        <option value="cross">Крестик</option>
-                    </select>
-                    <button id="sw-apply-shapes">Применить фигуры</button>
-                </div>
+            <div class="sw-input-group">
+                <input type="color" id="sw-bg-color" value="#0f0c29">
+                <button id="sw-apply-bg">Цвет фона</button>
+                <button id="sw-reset-bg" class="sw-reset-btn">Сброс</button>
             </div>
-            <div class="sw-subsection">
-                <h5>🚫 БАННЕРЫ</h5>
-                <div class="sw-input-group">
-                    <button id="sw-hide-banners">Скрыть баннеры/опросы</button>
-                    <button id="sw-show-banners">Показать всё</button>
-                    <button id="sw-reset-banners" class="sw-reset-btn">↺</button>
-                </div>
+            <div class="sw-input-group">
+                <button id="sw-hide-banners">Скрыть рекламу</button>
+                <button id="sw-show-banners">Показать рекламу</button>
+                <button id="sw-reset-banners" class="sw-reset-btn">Сброс</button>
             </div>
         `;
         
         document.getElementById('sw-apply-bg').addEventListener('click', () => {
             let color = document.getElementById('sw-bg-color').value;
-            document.body.style.backgroundColor = color;
-            document.body.style.backgroundImage = 'none';
+            document.body.style.background = color;
+            document.body.style.backgroundSize = 'cover';
             showMessage('Цвет фона изменён');
         });
         
         document.getElementById('sw-reset-bg').addEventListener('click', () => {
-            document.body.style.backgroundColor = originalBg;
-            document.body.style.backgroundImage = '';
-            document.getElementById('sw-bg-color').value = '#0f0c29';
+            document.body.style.background = originalBg;
             showMessage('Фон сброшен');
-        });
-        
-        document.getElementById('sw-apply-shapes').addEventListener('click', () => {
-            let shapeType = document.getElementById('sw-shape-type').value;
-            let bgColor = document.getElementById('sw-bg-color').value;
-            generateShapes(shapeType, bgColor);
-            showMessage('Фигуры на фоне обновлены');
         });
         
         document.getElementById('sw-hide-banners').addEventListener('click', hideBanners);
         document.getElementById('sw-show-banners').addEventListener('click', showBanners);
-        document.getElementById('sw-reset-banners').addEventListener('click', resetBanners);
+        document.getElementById('sw-reset-banners').addEventListener('click', showBanners);
     })();
     
     // ========== МОДУЛЬ НАСТРОЙКИ МЕНЮ ==========
@@ -873,132 +684,134 @@
         container.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
-        let menuThemes = {
+        let menuColors = {
             'Фиолетовый': 'rgba(10,8,20,0.95)',
             'Красный': 'rgba(40,10,15,0.95)',
             'Зелёный': 'rgba(10,30,15,0.95)',
             'Голубой': 'rgba(10,25,40,0.95)',
-            'Оранжевый': 'rgba(40,20,10,0.95)',
-            'Розовый': 'rgba(35,10,30,0.95)'
+            'Оранжевый': 'rgba(40,20,10,0.95)'
         };
         
-        function applyMenuTheme(themeName) {
-            let color = menuThemes[themeName];
-            if(color) {
-                document.documentElement.style.setProperty('--sw-bg', color);
-                showMessage('Тема меню: ' + themeName);
+        function applyMenuColor(color) {
+            document.querySelector('.sw-menu').style.background = color;
+            showMessage('Цвет меню изменён');
+        }
+        
+        function resetMenuColor() {
+            document.querySelector('.sw-menu').style.background = 'rgba(10,8,20,0.95)';
+            showMessage('Цвет меню сброшен');
+        }
+        
+        let profiles = { current: null, list: {} };
+        
+        function loadProfiles() {
+            try {
+                let saved = localStorage.getItem('sw_mod_profiles');
+                if(saved) profiles = JSON.parse(saved);
+            } catch(e) {}
+        }
+        
+        function saveProfiles() {
+            localStorage.setItem('sw_mod_profiles', JSON.stringify(profiles));
+        }
+        
+        function updateProfileSelect() {
+            let select = document.getElementById('sw-profile-select');
+            if(!select) return;
+            select.innerHTML = '<option value="">-- Выбрать профиль --</option>';
+            for(let name in profiles.list) {
+                select.innerHTML += `<option value="${name}" ${profiles.current === name ? 'selected' : ''}>${name}</option>`;
             }
         }
         
-        function resetMenuTheme() {
-            document.documentElement.style.setProperty('--sw-bg', 'rgba(10,8,20,0.95)');
-            showMessage('Тема меню сброшена');
+        function createProfile() {
+            let name = document.getElementById('sw-profile-name').value.trim();
+            if(!name) { showMessage('Введите имя профиля', true); return; }
+            if(profiles.list[name]) { showMessage('Профиль существует', true); return; }
+            
+            profiles.list[name] = {
+                menuColor: document.querySelector('.sw-menu').style.background,
+                bodyColor: document.body.style.background
+            };
+            profiles.current = name;
+            saveProfiles();
+            updateProfileSelect();
+            showMessage('Профиль создан: ' + name);
+        }
+        
+        function deleteProfile() {
+            let select = document.getElementById('sw-profile-select');
+            let name = select.value;
+            if(!name) { showMessage('Выберите профиль', true); return; }
+            delete profiles.list[name];
+            if(profiles.current === name) profiles.current = null;
+            saveProfiles();
+            updateProfileSelect();
+            showMessage('Профиль удалён: ' + name);
+        }
+        
+        function saveToProfile() {
+            let select = document.getElementById('sw-profile-select');
+            let name = select.value;
+            if(!name) { showMessage('Выберите профиль', true); return; }
+            if(!profiles.list[name]) { showMessage('Профиль не найден', true); return; }
+            profiles.list[name].menuColor = document.querySelector('.sw-menu').style.background;
+            profiles.list[name].bodyColor = document.body.style.background;
+            saveProfiles();
+            showMessage('Профиль сохранён: ' + name);
+        }
+        
+        function loadFromProfile() {
+            let select = document.getElementById('sw-profile-select');
+            let name = select.value;
+            if(!name) { showMessage('Выберите профиль', true); return; }
+            let p = profiles.list[name];
+            if(!p) { showMessage('Профиль не найден', true); return; }
+            if(p.menuColor) document.querySelector('.sw-menu').style.background = p.menuColor;
+            if(p.bodyColor) document.body.style.background = p.bodyColor;
+            profiles.current = name;
+            saveProfiles();
+            updateProfileSelect();
+            showMessage('Профиль загружен: ' + name);
         }
         
         loadProfiles();
         
-        function updateProfileUI() {
-            let profileSelect = document.getElementById('sw-profile-select');
-            if(profileSelect) {
-                let currentValue = profileSelect.value;
-                profileSelect.innerHTML = '<option value="">-- Выберите профиль --</option>';
-                for(let name in profiles.list) {
-                    let selected = (profiles.current === name) ? 'selected' : '';
-                    profileSelect.innerHTML += `<option value="${name}" ${selected}>${name}${profiles.current === name ? ' (текущий)' : ''}</option>`;
-                }
-                if(currentValue && profiles.list[currentValue]) {
-                    profileSelect.value = currentValue;
-                } else if(profiles.current) {
-                    profileSelect.value = profiles.current;
-                }
-            }
-        }
-        
         modContainer.innerHTML = `
-            <div class="sw-subsection">
-                <h5>🎨 Тема меню</h5>
-                <div class="sw-input-group">
-                    <select id="sw-menu-theme">
-                        <option value="Фиолетовый">Фиолетовый</option>
-                        <option value="Красный">Красный</option>
-                        <option value="Зелёный">Зелёный</option>
-                        <option value="Голубой">Голубой</option>
-                        <option value="Оранжевый">Оранжевый</option>
-                        <option value="Розовый">Розовый</option>
-                    </select>
-                    <button id="sw-apply-theme">Применить</button>
-                    <button id="sw-reset-theme" class="sw-reset-btn">↺</button>
-                </div>
+            <div class="sw-input-group">
+                <select id="sw-menu-color">
+                    <option value="rgba(10,8,20,0.95)">Фиолетовый</option>
+                    <option value="rgba(40,10,15,0.95)">Красный</option>
+                    <option value="rgba(10,30,15,0.95)">Зелёный</option>
+                    <option value="rgba(10,25,40,0.95)">Голубой</option>
+                    <option value="rgba(40,20,10,0.95)">Оранжевый</option>
+                </select>
+                <button id="sw-apply-menu-color">Применить</button>
+                <button id="sw-reset-menu-color" class="sw-reset-btn">Сброс</button>
             </div>
-            <div class="sw-subsection">
-                <h5>💾 Профили сохранений</h5>
-                <div class="sw-profile-buttons">
-                    <button id="sw-create-profile" style="background: linear-gradient(90deg, #00cc88, #009966);">Создать</button>
-                    <button id="sw-delete-profile" style="background: linear-gradient(90deg, #ff5500, #cc3300);">Удалить</button>
-                    <button id="sw-save-profile" style="background: linear-gradient(90deg, #3399ff, #2266cc);">Перезаписать</button>
-                    <button id="sw-load-profile" style="background: linear-gradient(90deg, #ffcc00, #cc9900);">Загрузить</button>
-                </div>
-                <div class="sw-input-group">
-                    <input type="text" id="sw-profile-name" placeholder="Имя профиля">
-                    <select id="sw-profile-select">
-                        <option value="">-- Выберите профиль --</option>
-                    </select>
-                </div>
+            <div class="sw-input-group">
+                <input type="text" id="sw-profile-name" placeholder="Имя профиля">
+                <select id="sw-profile-select"></select>
+            </div>
+            <div class="sw-input-group">
+                <button id="sw-profile-create" style="background: linear-gradient(90deg, #00cc88, #009966);">Создать</button>
+                <button id="sw-profile-delete" style="background: linear-gradient(90deg, #ff5500, #cc3300);">Удалить</button>
+                <button id="sw-profile-save" style="background: linear-gradient(90deg, #3399ff, #2266cc);">Сохранить</button>
+                <button id="sw-profile-load" style="background: linear-gradient(90deg, #ffcc00, #cc9900);">Загрузить</button>
             </div>
         `;
         
-        document.getElementById('sw-apply-theme').addEventListener('click', () => {
-            let theme = document.getElementById('sw-menu-theme').value;
-            applyMenuTheme(theme);
+        document.getElementById('sw-apply-menu-color').addEventListener('click', () => {
+            let color = document.getElementById('sw-menu-color').value;
+            applyMenuColor(color);
         });
+        document.getElementById('sw-reset-menu-color').addEventListener('click', resetMenuColor);
+        document.getElementById('sw-profile-create').addEventListener('click', createProfile);
+        document.getElementById('sw-profile-delete').addEventListener('click', deleteProfile);
+        document.getElementById('sw-profile-save').addEventListener('click', saveToProfile);
+        document.getElementById('sw-profile-load').addEventListener('click', loadFromProfile);
         
-        document.getElementById('sw-reset-theme').addEventListener('click', resetMenuTheme);
-        
-        document.getElementById('sw-create-profile').addEventListener('click', () => {
-            let name = document.getElementById('sw-profile-name').value.trim();
-            if(!name) {
-                showMessage('Введите имя профиля', true);
-                return;
-            }
-            createProfile(name);
-            updateProfileUI();
-        });
-        
-        document.getElementById('sw-delete-profile').addEventListener('click', () => {
-            let select = document.getElementById('sw-profile-select');
-            let name = select.value;
-            if(!name) {
-                showMessage('Выберите профиль', true);
-                return;
-            }
-            deleteProfile(name);
-            updateProfileUI();
-            document.getElementById('sw-profile-name').value = '';
-        });
-        
-        document.getElementById('sw-save-profile').addEventListener('click', () => {
-            let select = document.getElementById('sw-profile-select');
-            let name = select.value;
-            if(!name) {
-                showMessage('Выберите профиль', true);
-                return;
-            }
-            saveToProfile(name);
-            updateProfileUI();
-        });
-        
-        document.getElementById('sw-load-profile').addEventListener('click', () => {
-            let select = document.getElementById('sw-profile-select');
-            let name = select.value;
-            if(!name) {
-                showMessage('Выберите профиль', true);
-                return;
-            }
-            loadProfile(name);
-            updateProfileUI();
-        });
-        
-        updateProfileUI();
+        updateProfileSelect();
     })();
     
     // ========== ДРАГ-Н-ДРОП ==========
