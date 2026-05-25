@@ -1,6 +1,6 @@
 (function(){
-    let style = document.createElement('style');
-    style.textContent = `
+    let swStyle = document.createElement('style');
+    swStyle.textContent = `
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-8px); }
@@ -53,9 +53,9 @@
             width: 480px;
             min-width: 320px;
             max-width: 90vw;
-            resize: both;
-            overflow: auto;
             max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
             background: rgba(10,8,20,0.95);
             backdrop-filter: blur(16px);
             border-radius: 28px;
@@ -75,7 +75,7 @@
         }
         
         .sw-header {
-            background: linear-gradient(90deg, #0f0c29, #302b63, #24243e);
+            background: inherit;
             padding: 18px 24px;
             border-radius: 28px 28px 0 0;
             cursor: move;
@@ -119,8 +119,6 @@
         
         .sw-content {
             padding: 20px;
-            overflow-y: auto;
-            max-height: calc(85vh - 100px);
         }
         
         .sw-section {
@@ -149,7 +147,7 @@
         
         .sw-input-group input, .sw-input-group select {
             flex: 1;
-            min-width: 120px;
+            min-width: 100px;
             padding: 10px 12px;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.2);
@@ -198,6 +196,7 @@
             padding: 10px 16px;
             border-radius: 12px;
             border: none;
+            background: linear-gradient(90deg, #ff00cc, #3333ff);
             color: white;
             cursor: pointer;
             font-weight: bold;
@@ -210,19 +209,13 @@
             opacity: 0.9;
         }
         
-        .sw-check-btn {
-            background: linear-gradient(90deg, #00cc66, #009944);
-        }
-        
         .sw-reset-btn {
-            background: rgba(50,50,65,0.7) !important;
+            background: rgba(30,30,40,0.6) !important;
             border: 1px dashed rgba(255,255,255,0.4) !important;
-            font-size: 16px;
-            padding: 8px 14px !important;
+            color: rgba(255,255,255,0.7) !important;
         }
-        
         .sw-reset-btn:hover {
-            background: rgba(70,70,90,0.9) !important;
+            background: rgba(50,50,65,0.8) !important;
         }
         
         .sw-color-row {
@@ -293,21 +286,20 @@
             color: white;
         }
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(swStyle);
     
-    // Удаляем старые элементы если есть
     if(window.swBall) window.swBall.remove();
     if(window.swMenu) window.swMenu.remove();
     
-    let ball = document.createElement('div');
-    ball.className = 'sw-ball';
-    ball.innerHTML = 'SW';
-    document.body.appendChild(ball);
-    window.swBall = ball;
+    let swBall = document.createElement('div');
+    swBall.className = 'sw-ball';
+    swBall.innerHTML = 'SW';
+    document.body.appendChild(swBall);
+    window.swBall = swBall;
     
-    let menu = document.createElement('div');
-    menu.className = 'sw-menu';
-    menu.innerHTML = `
+    let swMenu = document.createElement('div');
+    swMenu.className = 'sw-menu';
+    swMenu.innerHTML = `
         <div class="sw-header">
             <span class="sw-title">★ SW MOD ★</span>
             <div class="sw-controls">
@@ -319,39 +311,38 @@
         <div id="sw-toast" class="sw-message"></div>
         <div class="sw-resize-handle"></div>
     `;
-    document.body.appendChild(menu);
-    window.swMenu = menu;
+    document.body.appendChild(swMenu);
+    window.swMenu = swMenu;
     
-    // Ресайз меню
-    let resizeHandle = menu.querySelector('.sw-resize-handle');
-    let isResizing = false;
-    let rStartX, rStartY, startWidth, startHeight;
+    let swResizeHandle = swMenu.querySelector('.sw-resize-handle');
+    let swIsResizing = false;
+    let swResizeStartX, swResizeStartY, swStartWidth, swStartHeight;
     
-    resizeHandle.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        rStartX = e.clientX;
-        rStartY = e.clientY;
-        startWidth = menu.offsetWidth;
-        startHeight = menu.offsetHeight;
-        menu.style.transform = 'none';
-        menu.style.left = menu.offsetLeft + 'px';
-        menu.style.top = menu.offsetTop + 'px';
+    swResizeHandle.addEventListener('mousedown', (e) => {
+        swIsResizing = true;
+        swResizeStartX = e.clientX;
+        swResizeStartY = e.clientY;
+        swStartWidth = swMenu.offsetWidth;
+        swStartHeight = swMenu.offsetHeight;
+        swMenu.style.transform = 'none';
+        swMenu.style.left = swMenu.offsetLeft + 'px';
+        swMenu.style.top = swMenu.offsetTop + 'px';
         e.preventDefault();
         e.stopPropagation();
     });
     
     document.addEventListener('mousemove', (e) => {
-        if(!isResizing) return;
-        let newWidth = startWidth + (e.clientX - rStartX);
-        let newHeight = startHeight + (e.clientY - rStartY);
+        if(!swIsResizing) return;
+        let newWidth = swStartWidth + (e.clientX - swResizeStartX);
+        let newHeight = swStartHeight + (e.clientY - swResizeStartY);
         newWidth = Math.min(window.innerWidth - 50, Math.max(320, newWidth));
         newHeight = Math.min(window.innerHeight - 50, Math.max(400, newHeight));
-        menu.style.width = newWidth + 'px';
-        menu.style.height = newHeight + 'px';
+        swMenu.style.width = newWidth + 'px';
+        swMenu.style.height = newHeight + 'px';
     });
     
     document.addEventListener('mouseup', () => {
-        isResizing = false;
+        swIsResizing = false;
     });
     
     function showMessage(text, isError) {
@@ -389,14 +380,14 @@
         setTimeout(() => clearInterval(interval), timeout);
     }
     
-    let container = document.getElementById('sw-modules-container');
+    let swContainer = document.getElementById('sw-modules-container');
     
     // ========== МОДУЛЬ ПЕРСОНАЖ ==========
     (function() {
         let section = document.createElement('div');
         section.className = 'sw-section';
         section.innerHTML = '<h4>ПЕРСОНАЖ</h4><div class="sw-module-content"><div class="sw-loading">Загрузка...</div></div>';
-        container.appendChild(section);
+        swContainer.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
         let clothesUrls = {
@@ -450,21 +441,11 @@
             return el ? el.textContent.trim() : 'Имя';
         }
         
-        function resetCharacter() {
-            waitForElement('.avatar__part_clothes', (clothesPart) => {
-                clothesPart.innerHTML = '';
-            });
-            waitForElement('.avatar__part_hair-front', (hairPart) => {
-                hairPart.innerHTML = '';
-            });
-            showMessage('Персонаж сброшен');
-        }
-        
         waitForElement('.avatar__part_clothes', () => {
             modContainer.innerHTML = `
                 <div class="sw-input-group">
                     <input type="text" id="sw-name-input" placeholder="${getCurrentName()}">
-                    <button id="sw-apply-name" class="sw-check-btn">✓</button>
+                    <button id="sw-apply-name">✓</button>
                     <button id="sw-reset-name" class="sw-reset-btn">⟳</button>
                 </div>
                 <div class="sw-input-group">
@@ -474,7 +455,8 @@
                             ${Object.keys(clothesUrls).map(i => `<option value="${i}">Вариант ${i}</option>`).join('')}
                         </select>
                     </div>
-                    <button id="sw-apply-clothes" class="sw-check-btn">✓</button>
+                    <button id="sw-apply-clothes">✓</button>
+                    <button id="sw-reset-clothes" class="sw-reset-btn">⟳</button>
                 </div>
                 <div class="sw-input-group">
                     <div class="sw-custom-select">
@@ -483,7 +465,8 @@
                             ${Object.keys(hairUrls).map(i => `<option value="${i}">Вариант ${i}</option>`).join('')}
                         </select>
                     </div>
-                    <button id="sw-apply-hair" class="sw-check-btn">✓</button>
+                    <button id="sw-apply-hair">✓</button>
+                    <button id="sw-reset-hair" class="sw-reset-btn">⟳</button>
                 </div>
                 <div class="sw-color-row" id="sw-hair-colors">
                     <div class="sw-color-option" style="background:#212121" title="Чёрный"></div>
@@ -494,9 +477,6 @@
                     <div class="sw-color-option" style="background:#FF6347" title="Красный"></div>
                     <div class="sw-color-option" style="background:#9400D3" title="Фиолетовый"></div>
                     <div class="sw-color-option" style="background:#00BFFF" title="Голубой"></div>
-                </div>
-                <div class="sw-input-group">
-                    <button id="sw-reset-character" class="sw-reset-btn">⟳ Восстановить</button>
                 </div>
             `;
             
@@ -548,6 +528,13 @@
                 });
             });
             
+            document.getElementById('sw-reset-clothes').addEventListener('click', () => {
+                waitForElement('.avatar__part_clothes', (clothesPart) => {
+                    clothesPart.innerHTML = '';
+                    showMessage('Одежда сброшена');
+                });
+            });
+            
             document.getElementById('sw-apply-hair').addEventListener('click', () => {
                 let value = document.getElementById('sw-hair-select').value;
                 waitForElement('.avatar__part_hair-front', (hairPart) => {
@@ -570,7 +557,12 @@
                 });
             });
             
-            document.getElementById('sw-reset-character').addEventListener('click', resetCharacter);
+            document.getElementById('sw-reset-hair').addEventListener('click', () => {
+                waitForElement('.avatar__part_hair-front', (hairPart) => {
+                    hairPart.innerHTML = '';
+                    showMessage('Причёска сброшена');
+                });
+            });
             
             document.querySelectorAll('#sw-hair-colors .sw-color-option').forEach(colorEl => {
                 colorEl.addEventListener('click', () => {
@@ -593,7 +585,7 @@
         let section = document.createElement('div');
         section.className = 'sw-section';
         section.innerHTML = '<h4>МОНЕТЫ</h4><div class="sw-module-content"><div class="sw-loading">Загрузка...</div></div>';
-        container.appendChild(section);
+        swContainer.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
         function findCoinElement() {
@@ -632,7 +624,7 @@
             modContainer.innerHTML = `
                 <div class="sw-input-group">
                     <input type="text" id="sw-coins-input" placeholder="${getCurrentCoins()}">
-                    <button id="sw-apply-coins" class="sw-check-btn">✓</button>
+                    <button id="sw-apply-coins">✓</button>
                     <button id="sw-reset-coins" class="sw-reset-btn">⟳</button>
                 </div>
             `;
@@ -664,7 +656,7 @@
         let section = document.createElement('div');
         section.className = 'sw-section';
         section.innerHTML = '<h4>КАСТОМИЗАЦИЯ</h4><div class="sw-module-content"></div>';
-        container.appendChild(section);
+        swContainer.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
         let originalBg = document.body.style.background;
@@ -713,32 +705,28 @@
         
         function applyBgColor() {
             let color = document.getElementById('sw-bg-color').value;
-            document.body.style.background = color;
-            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundColor = color;
+            document.body.style.backgroundImage = 'none';
             showMessage('Цвет фона изменён');
         }
         
         modContainer.innerHTML = `
             <div class="sw-input-group">
                 <input type="color" id="sw-bg-color" value="#0f0c29">
-                <button id="sw-apply-bg" class="sw-check-btn">✓</button>
+                <button id="sw-apply-bg">✓</button>
                 <button id="sw-reset-bg" class="sw-reset-btn">⟳</button>
             </div>
             <div class="sw-input-group">
-                <button id="sw-hide-banners" class="sw-check-btn">Скрыть рекламу</button>
-                <button id="sw-show-banners" class="sw-check-btn">Показать рекламу</button>
+                <button id="sw-hide-banners">Скрыть рекламу</button>
+                <button id="sw-show-banners">Показать рекламу</button>
                 <button id="sw-reset-banners" class="sw-reset-btn">⟳</button>
             </div>
         `;
         
-        let bgColorInput = document.getElementById('sw-bg-color');
-        let applyBgBtn = document.getElementById('sw-apply-bg');
-        let resetBgBtn = document.getElementById('sw-reset-bg');
+        document.getElementById('sw-apply-bg').addEventListener('click', applyBgColor);
+        document.getElementById('sw-bg-color').addEventListener('change', applyBgColor);
         
-        applyBgBtn.addEventListener('click', applyBgColor);
-        bgColorInput.addEventListener('change', applyBgColor);
-        
-        resetBgBtn.addEventListener('click', () => {
+        document.getElementById('sw-reset-bg').addEventListener('click', () => {
             document.body.style.background = originalBg;
             showMessage('Фон сброшен');
         });
@@ -753,16 +741,24 @@
         let section = document.createElement('div');
         section.className = 'sw-section';
         section.innerHTML = '<h4>НАСТРОЙКИ МЕНЮ</h4><div class="sw-module-content"></div>';
-        container.appendChild(section);
+        swContainer.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
+        let menuThemes = {
+            'Фиолетовый': 'rgba(10,8,20,0.95)',
+            'Красный': 'rgba(40,10,15,0.95)',
+            'Зелёный': 'rgba(10,30,15,0.95)',
+            'Голубой': 'rgba(10,25,40,0.95)',
+            'Оранжевый': 'rgba(40,20,10,0.95)'
+        };
+        
         function applyMenuColor(color) {
-            document.querySelector('.sw-menu').style.background = color;
+            swMenu.style.background = color;
             showMessage('Цвет меню изменён');
         }
         
         function resetMenuColor() {
-            document.querySelector('.sw-menu').style.background = 'rgba(10,8,20,0.95)';
+            swMenu.style.background = 'rgba(10,8,20,0.95)';
             showMessage('Цвет меню сброшен');
         }
         
@@ -794,7 +790,7 @@
             if(profiles.list[name]) { showMessage('Профиль существует', true); return; }
             
             profiles.list[name] = {
-                menuColor: document.querySelector('.sw-menu').style.background,
+                menuColor: swMenu.style.background,
                 bodyColor: document.body.style.background
             };
             profiles.current = name;
@@ -819,7 +815,7 @@
             let name = select.value;
             if(!name) { showMessage('Выберите профиль', true); return; }
             if(!profiles.list[name]) { showMessage('Профиль не найден', true); return; }
-            profiles.list[name].menuColor = document.querySelector('.sw-menu').style.background;
+            profiles.list[name].menuColor = swMenu.style.background;
             profiles.list[name].bodyColor = document.body.style.background;
             saveProfiles();
             showMessage('Профиль сохранён: ' + name);
@@ -831,7 +827,7 @@
             if(!name) { showMessage('Выберите профиль', true); return; }
             let p = profiles.list[name];
             if(!p) { showMessage('Профиль не найден', true); return; }
-            if(p.menuColor) document.querySelector('.sw-menu').style.background = p.menuColor;
+            if(p.menuColor) swMenu.style.background = p.menuColor;
             if(p.bodyColor) document.body.style.background = p.bodyColor;
             profiles.current = name;
             saveProfiles();
@@ -850,7 +846,7 @@
                     <option value="rgba(10,25,40,0.95)">Голубой</option>
                     <option value="rgba(40,20,10,0.95)">Оранжевый</option>
                 </select>
-                <button id="sw-apply-menu-color" class="sw-check-btn">✓</button>
+                <button id="sw-apply-menu-color">✓</button>
                 <button id="sw-reset-menu-color" class="sw-reset-btn">⟳</button>
             </div>
             <div class="sw-input-group">
@@ -858,10 +854,10 @@
                 <select id="sw-profile-select"></select>
             </div>
             <div class="sw-input-group">
-                <button id="sw-profile-create" style="background: linear-gradient(90deg, #00cc88, #009966);">Создать</button>
-                <button id="sw-profile-delete" style="background: linear-gradient(90deg, #ff5500, #cc3300);">Удалить</button>
-                <button id="sw-profile-save" style="background: linear-gradient(90deg, #3399ff, #2266cc);">Сохранить</button>
-                <button id="sw-profile-load" style="background: linear-gradient(90deg, #ffcc00, #cc9900);">Загрузить</button>
+                <button id="sw-profile-create">Создать</button>
+                <button id="sw-profile-delete">Удалить</button>
+                <button id="sw-profile-save">Сохранить</button>
+                <button id="sw-profile-load">Загрузить</button>
             </div>
         `;
         
@@ -882,13 +878,13 @@
     let dragActive = false;
     let dragStartX, dragStartY, ballStartLeft, ballStartTop;
     
-    ball.addEventListener('mousedown', (e) => {
+    swBall.addEventListener('mousedown', (e) => {
         dragActive = true;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
-        ballStartLeft = ball.offsetLeft;
-        ballStartTop = ball.offsetTop;
-        ball.style.cursor = 'grabbing';
+        ballStartLeft = swBall.offsetLeft;
+        ballStartTop = swBall.offsetTop;
+        swBall.style.cursor = 'grabbing';
         e.preventDefault();
     });
     
@@ -896,32 +892,32 @@
         if(!dragActive) return;
         let newLeft = ballStartLeft + (e.clientX - dragStartX);
         let newTop = ballStartTop + (e.clientY - dragStartY);
-        newLeft = Math.max(0, Math.min(window.innerWidth - ball.offsetWidth, newLeft));
-        newTop = Math.max(0, Math.min(window.innerHeight - ball.offsetHeight, newTop));
-        ball.style.left = newLeft + 'px';
-        ball.style.top = newTop + 'px';
-        ball.style.right = 'auto';
-        ball.style.bottom = 'auto';
+        newLeft = Math.max(0, Math.min(window.innerWidth - swBall.offsetWidth, newLeft));
+        newTop = Math.max(0, Math.min(window.innerHeight - swBall.offsetHeight, newTop));
+        swBall.style.left = newLeft + 'px';
+        swBall.style.top = newTop + 'px';
+        swBall.style.right = 'auto';
+        swBall.style.bottom = 'auto';
     });
     
     document.addEventListener('mouseup', () => {
         dragActive = false;
-        ball.style.cursor = 'grab';
+        swBall.style.cursor = 'grab';
     });
     
     let menuDragActive = false;
     let menuDragStartX, menuDragStartY, menuStartLeft, menuStartTop;
-    let menuHeader = menu.querySelector('.sw-header');
+    let menuHeader = swMenu.querySelector('.sw-header');
     
     menuHeader.addEventListener('mousedown', (e) => {
         if(e.target.tagName === 'BUTTON') return;
         menuDragActive = true;
         menuDragStartX = e.clientX;
         menuDragStartY = e.clientY;
-        menuStartLeft = menu.offsetLeft;
-        menuStartTop = menu.offsetTop;
-        menu.style.cursor = 'grabbing';
-        menu.style.transform = 'none';
+        menuStartLeft = swMenu.offsetLeft;
+        menuStartTop = swMenu.offsetTop;
+        swMenu.style.cursor = 'grabbing';
+        swMenu.style.transform = 'none';
         e.preventDefault();
     });
     
@@ -929,37 +925,37 @@
         if(!menuDragActive) return;
         let newLeft = menuStartLeft + (e.clientX - menuDragStartX);
         let newTop = menuStartTop + (e.clientY - menuDragStartY);
-        newLeft = Math.max(-menu.offsetWidth + 50, Math.min(window.innerWidth - 50, newLeft));
+        newLeft = Math.max(-swMenu.offsetWidth + 50, Math.min(window.innerWidth - 50, newLeft));
         newTop = Math.max(0, Math.min(window.innerHeight - 100, newTop));
-        menu.style.left = newLeft + 'px';
-        menu.style.top = newTop + 'px';
+        swMenu.style.left = newLeft + 'px';
+        swMenu.style.top = newTop + 'px';
     });
     
     document.addEventListener('mouseup', () => {
         menuDragActive = false;
-        menu.style.cursor = 'default';
+        swMenu.style.cursor = 'default';
     });
     
     let menuVisible = true;
-    ball.addEventListener('click', () => {
+    swBall.addEventListener('click', () => {
         if(menuVisible) {
-            menu.style.display = 'none';
+            swMenu.style.display = 'none';
             menuVisible = false;
         } else {
-            menu.style.display = 'block';
-            if(menu.style.left && menu.style.left !== 'auto') {
-                menu.style.transform = 'none';
+            swMenu.style.display = 'block';
+            if(swMenu.style.left && swMenu.style.left !== 'auto') {
+                swMenu.style.transform = 'none';
             } else {
-                menu.style.left = '50%';
-                menu.style.top = '50%';
-                menu.style.transform = 'translate(-50%, -50%)';
+                swMenu.style.left = '50%';
+                swMenu.style.top = '50%';
+                swMenu.style.transform = 'translate(-50%, -50%)';
             }
             menuVisible = true;
         }
     });
     
-    menu.querySelector('.sw-close-menu').addEventListener('click', () => {
-        menu.style.display = 'none';
+    swMenu.querySelector('.sw-close-menu').addEventListener('click', () => {
+        swMenu.style.display = 'none';
         menuVisible = false;
     });
     
