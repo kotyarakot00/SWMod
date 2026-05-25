@@ -390,6 +390,10 @@
         swContainer.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
+        let savedName = '';
+        let savedClothes = '';
+        let savedHair = '';
+        
         let clothesUrls = {
             '1': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/shirt-1-a3013c4fa9c391fe1bac95ce6c4ee82a.svg',
             '2': 'https://assets.uchi.ru/assets/student/avatar_constructor/avatar/clothes/shirt-2-14e12c50a6def128c05f9dd5755f63d6.svg',
@@ -441,7 +445,51 @@
             return el ? el.textContent.trim() : 'Имя';
         }
         
+        function saveCurrentState() {
+            let nameEl = findNameElement();
+            if(nameEl) savedName = nameEl.textContent;
+            let clothesEl = document.querySelector('.avatar__part_clothes svg');
+            if(clothesEl) savedClothes = clothesEl.outerHTML;
+            let hairEl = document.querySelector('.avatar__part_hair-front svg');
+            if(hairEl) savedHair = hairEl.outerHTML;
+        }
+        
+        function restoreName() {
+            let nameEl = findNameElement();
+            if(nameEl && savedName) {
+                nameEl.textContent = savedName;
+                showMessage('Имя восстановлено');
+            } else {
+                showMessage('Нечего восстанавливать', true);
+            }
+        }
+        
+        function restoreClothes() {
+            if(savedClothes) {
+                waitForElement('.avatar__part_clothes', (clothesPart) => {
+                    clothesPart.innerHTML = savedClothes;
+                    showMessage('Одежда восстановлена');
+                });
+            } else {
+                showMessage('Нечего восстанавливать', true);
+            }
+        }
+        
+        function restoreHair() {
+            if(savedHair) {
+                waitForElement('.avatar__part_hair-front', (hairPart) => {
+                    hairPart.innerHTML = savedHair;
+                    showMessage('Причёска восстановлена');
+                });
+            } else {
+                showMessage('Нечего восстанавливать', true);
+            }
+        }
+        
         waitForElement('.avatar__part_clothes', () => {
+            // Сохраняем начальное состояние
+            setTimeout(saveCurrentState, 500);
+            
             modContainer.innerHTML = `
                 <div class="sw-input-group">
                     <input type="text" id="sw-name-input" placeholder="${getCurrentName()}">
@@ -493,18 +541,13 @@
                     showMessage('Имя изменено');
                     input.value = '';
                     input.placeholder = getCurrentName();
+                    saveCurrentState();
                 } else {
                     showMessage('Элемент с именем не найден', true);
                 }
             });
             
-            document.getElementById('sw-reset-name').addEventListener('click', () => {
-                let nameEl = findNameElement();
-                if(nameEl) {
-                    nameEl.textContent = 'Имя';
-                    showMessage('Имя сброшено');
-                }
-            });
+            document.getElementById('sw-reset-name').addEventListener('click', restoreName);
             
             document.getElementById('sw-apply-clothes').addEventListener('click', () => {
                 let value = document.getElementById('sw-clothes-select').value;
@@ -522,18 +565,14 @@
                                 clothesPart.innerHTML = '';
                                 clothesPart.appendChild(svgElem);
                                 showMessage('Одежда изменена');
+                                saveCurrentState();
                             }
                         }).catch(() => showMessage('Ошибка загрузки', true));
                     }
                 });
             });
             
-            document.getElementById('sw-reset-clothes').addEventListener('click', () => {
-                waitForElement('.avatar__part_clothes', (clothesPart) => {
-                    clothesPart.innerHTML = '';
-                    showMessage('Одежда сброшена');
-                });
-            });
+            document.getElementById('sw-reset-clothes').addEventListener('click', restoreClothes);
             
             document.getElementById('sw-apply-hair').addEventListener('click', () => {
                 let value = document.getElementById('sw-hair-select').value;
@@ -551,18 +590,14 @@
                                 hairPart.innerHTML = '';
                                 hairPart.appendChild(svgElem);
                                 showMessage('Причёска изменена');
+                                saveCurrentState();
                             }
                         }).catch(() => showMessage('Ошибка загрузки', true));
                     }
                 });
             });
             
-            document.getElementById('sw-reset-hair').addEventListener('click', () => {
-                waitForElement('.avatar__part_hair-front', (hairPart) => {
-                    hairPart.innerHTML = '';
-                    showMessage('Причёска сброшена');
-                });
-            });
+            document.getElementById('sw-reset-hair').addEventListener('click', restoreHair);
             
             document.querySelectorAll('#sw-hair-colors .sw-color-option').forEach(colorEl => {
                 colorEl.addEventListener('click', () => {
@@ -573,6 +608,7 @@
                             svg.style.fill = color;
                             svg.querySelectorAll('path').forEach(p => p.style.fill = color);
                             showMessage('Цвет волос изменён');
+                            saveCurrentState();
                         }
                     });
                 });
@@ -587,6 +623,8 @@
         section.innerHTML = '<h4>МОНЕТЫ</h4><div class="sw-module-content"><div class="sw-loading">Загрузка...</div></div>';
         swContainer.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
+        
+        let savedCoins = '0';
         
         function findCoinElement() {
             let selectors = [
@@ -607,11 +645,18 @@
             return el ? el.textContent.trim() : '0';
         }
         
-        function resetCoins() {
+        function saveCoins() {
+            let el = findCoinElement();
+            if(el) savedCoins = el.textContent;
+        }
+        
+        function restoreCoins() {
             let coinEl = findCoinElement();
-            if(coinEl) {
-                coinEl.textContent = '0';
-                showMessage('Монеты сброшены');
+            if(coinEl && savedCoins) {
+                coinEl.textContent = savedCoins;
+                showMessage('Монеты восстановлены');
+            } else {
+                showMessage('Нечего восстанавливать', true);
             }
         }
         
@@ -621,6 +666,8 @@
             '#ssi-header-coin-image + .ds-text',
             '[data-testid="headbar-characterroom"] .ds-text'
         ], () => {
+            setTimeout(saveCoins, 500);
+            
             modContainer.innerHTML = `
                 <div class="sw-input-group">
                     <input type="text" id="sw-coins-input" placeholder="${getCurrentCoins()}">
@@ -642,105 +689,21 @@
                     showMessage('Монеты изменены');
                     input.value = '';
                     input.placeholder = getCurrentCoins();
+                    saveCoins();
                 } else {
                     showMessage('Элемент с монетами не найден', true);
                 }
             });
             
-            document.getElementById('sw-reset-coins').addEventListener('click', resetCoins);
+            document.getElementById('sw-reset-coins').addEventListener('click', restoreCoins);
         });
     })();
     
-    // ========== МОДУЛЬ КАСТОМИЗАЦИЯ ==========
+    // ========== МОДУЛЬ НАСТРОЙКИ ==========
     (function() {
         let section = document.createElement('div');
         section.className = 'sw-section';
-        section.innerHTML = '<h4>КАСТОМИЗАЦИЯ</h4><div class="sw-module-content"></div>';
-        swContainer.appendChild(section);
-        let modContainer = section.querySelector('.sw-module-content');
-        
-        let originalBg = document.body.style.background;
-        
-        let blackListSelectors = [
-            'a[href*="anketolog"]', '#anketolog-widget-button', '[id*="anketolog"]', '[class*="anketolog"]',
-            '[class*="advertisement"]', '[class*="offer"]', '[class*="promo"]', '[data-testid*="promo"]',
-            '.sc-fwwElh', '.sc-jSoCLE', '.sc-nZgfj', '.sc-eJReFG'
-        ];
-        
-        let whiteListSelectors = [
-            '.sw-ball', '.sw-menu', '.sw-header', '.sw-content', '.sw-section',
-            '.sw-input-group', '.sw-custom-select', '.sw-color-row', '.sw-color-option',
-            '.sw-footer', '#sw-toast', '.sw-module-content', '.sw-title',
-            '.sw-controls', '.sw-close-menu', '.marathon-banner-container',
-            '[class*="marathon"]', '[class*="Marathon"]'
-        ];
-        
-        function isWhiteListed(element) {
-            while(element) {
-                for(let selector of whiteListSelectors) {
-                    if(element.matches && element.matches(selector)) return true;
-                }
-                element = element.parentElement;
-            }
-            return false;
-        }
-        
-        function hideBanners() {
-            for(let selector of blackListSelectors) {
-                document.querySelectorAll(selector).forEach(el => {
-                    if(!isWhiteListed(el)) el.style.display = 'none';
-                });
-            }
-            showMessage('Реклама и опросы скрыты');
-        }
-        
-        function showBanners() {
-            for(let selector of blackListSelectors) {
-                document.querySelectorAll(selector).forEach(el => {
-                    if(!isWhiteListed(el)) el.style.display = '';
-                });
-            }
-            showMessage('Реклама и опросы показаны');
-        }
-        
-        function applyBgColor() {
-            let color = document.getElementById('sw-bg-color').value;
-            document.body.style.backgroundColor = color;
-            document.body.style.backgroundImage = 'none';
-            showMessage('Цвет фона изменён');
-        }
-        
-        modContainer.innerHTML = `
-            <div class="sw-input-group">
-                <input type="color" id="sw-bg-color" value="#0f0c29">
-                <button id="sw-apply-bg">✓</button>
-                <button id="sw-reset-bg" class="sw-reset-btn">⟳</button>
-            </div>
-            <div class="sw-input-group">
-                <button id="sw-hide-banners">Скрыть рекламу</button>
-                <button id="sw-show-banners">Показать рекламу</button>
-                <button id="sw-reset-banners" class="sw-reset-btn">⟳</button>
-            </div>
-        `;
-        
-        document.getElementById('sw-apply-bg').addEventListener('click', applyBgColor);
-        document.getElementById('sw-bg-color').addEventListener('change', applyBgColor);
-        
-        document.getElementById('sw-reset-bg').addEventListener('click', () => {
-            document.body.style.background = originalBg;
-            showMessage('Фон сброшен');
-        });
-        
-        document.getElementById('sw-hide-banners').addEventListener('click', hideBanners);
-        document.getElementById('sw-show-banners').addEventListener('click', showBanners);
-        document.getElementById('sw-reset-banners').addEventListener('click', showBanners);
-    })();
-    
-    // ========== МОДУЛЬ НАСТРОЙКИ МЕНЮ ==========
-    (function() {
-        let section = document.createElement('div');
-        section.className = 'sw-section';
-        section.innerHTML = '<h4>НАСТРОЙКИ МЕНЮ</h4><div class="sw-module-content"></div>';
+        section.innerHTML = '<h4>НАСТРОЙКИ</h4><div class="sw-module-content"></div>';
         swContainer.appendChild(section);
         let modContainer = section.querySelector('.sw-module-content');
         
@@ -790,8 +753,7 @@
             if(profiles.list[name]) { showMessage('Профиль существует', true); return; }
             
             profiles.list[name] = {
-                menuColor: swMenu.style.background,
-                bodyColor: document.body.style.background
+                menuColor: swMenu.style.background
             };
             profiles.current = name;
             saveProfiles();
@@ -816,7 +778,6 @@
             if(!name) { showMessage('Выберите профиль', true); return; }
             if(!profiles.list[name]) { showMessage('Профиль не найден', true); return; }
             profiles.list[name].menuColor = swMenu.style.background;
-            profiles.list[name].bodyColor = document.body.style.background;
             saveProfiles();
             showMessage('Профиль сохранён: ' + name);
         }
@@ -828,7 +789,6 @@
             let p = profiles.list[name];
             if(!p) { showMessage('Профиль не найден', true); return; }
             if(p.menuColor) swMenu.style.background = p.menuColor;
-            if(p.bodyColor) document.body.style.background = p.bodyColor;
             profiles.current = name;
             saveProfiles();
             updateProfileSelect();
